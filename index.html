@@ -119,7 +119,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
    <div style="margin-top:10px">
         <div class="mut" style="margin:14px 0 4px">所有帳號互通：第一個同步的帳號是主帳，筆記只存主帳的 Drive，其他帳號都能編輯，沒有誰的資料優先（逐則比最後修改時間）。帳號名單會隨筆記同步，在任何一個帳號新增或移除，其他帳號下次同步就會跟上。主帳滿了時，新圖片可改存到其他帳號。</div>
     <select id="gddest"><option value="a"></option></select>
-    <div class="row" style="margin-top:8px;flex-wrap:nowrap;align-items:stretch;gap:6px"><button class="b g q4" id="gdblogin">新增帳號</button><button class="b g q4" id="gdbclr">移除所選帳號</button><button class="b g q4" id="gbk">另存備份檔</button><label class="b g q4">匯入備份<input id="gimp" type="file" accept=".json,application/json" hidden></label></div>
+    <div class="row" style="margin-top:8px;flex-wrap:nowrap;align-items:stretch;gap:6px"><button class="b g q4" id="gdblogin">新增帳號</button><button class="b g q4" id="gdbclr">移除帳號</button><button class="b g q4" id="gbk">另存備份</button><label class="b g q4">匯入備份<input id="gimp" type="file" accept=".json,application/json" hidden></label></div>
     <div class="mut" id="gdbst" style="margin-top:8px"></div>
     <p class="mut" style="margin:8px 0 0">兩個帳號都可以編輯；同一則筆記兩邊都改過時，留下較新的。「匯入備份」仍會覆蓋這台裝置的資料。</p>
    </div>
@@ -1209,7 +1209,7 @@ function mergeAccts(r){
   try{localStorage.setItem('oc_gd_amt',JSON.stringify(t));localStorage.setItem('oc_gd_adel',JSON.stringify(d));localStorage.setItem('oc_gd_accts',JSON.stringify(list));
     if(r.main&&!MAIN())localStorage.setItem('oc_gd_main',r.main)}catch(e){}
 }
-function gdFill(){{const am=ls.get('oc_gd_amail','');$('#gdcur').textContent=am?'目前登入的 Google 帳號：'+am+(MAIN()?(MAIN()===am?'（主帳）':'（成員；主帳：'+MAIN()+'）'):''):'還沒登入 Google（按一次上傳或下載後，這裡會顯示你的信箱）'}$('#gddest').innerHTML='<option value="a">'+esc(ls.get('oc_gd_amail','')||'主帳號（登入後顯示信箱）')+'</option>'+OTHERS().map(e=>'<option value="'+esc(e)+'">'+esc(e)+'</option>').join('');{const d=ls.get('oc_gd_dest','')||(OTHERS()[0]||'a');$('#gddest').value=d;if($('#gddest').value!==d)$('#gddest').value='a'}}
+function gdFill(){{const am=ls.get('oc_gd_amail','');$('#gdcur').textContent=am?'目前登入的 Google 帳號：'+am+(MAIN()?(MAIN()===am?'（主帳）':'（成員；主帳：'+MAIN()+'）'):''):''}$('#gddest').innerHTML='<option value="a">'+esc(ls.get('oc_gd_amail','')||'主帳號（登入後顯示信箱）')+'</option>'+OTHERS().map(e=>'<option value="'+esc(e)+'">'+esc(e)+'</option>').join('');{const d=ls.get('oc_gd_dest','')||(OTHERS()[0]||'a');$('#gddest').value=d;if($('#gddest').value!==d)$('#gddest').value='a'}}
 gdFill();
 const GAPI='https://www.googleapis.com/drive/v3/';
 const GT={};
