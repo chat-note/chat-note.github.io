@@ -170,14 +170,12 @@ body.kbo #dock{padding-bottom:8px}
     <p class="mut" style="margin:8px 0 0">兩個帳號都可以編輯；同一則筆記兩邊都改過時，留下較新的。「匯入備份」仍會覆蓋這台裝置的資料。</p>
    </div>
   </details>
-  <details class="card"><summary>GitHub Gist 同步（文字）</summary>
+  <details class="card"><summary>本機儲存空間</summary>
    <div style="margin-top:10px">
-    <p class="mut" style="margin-top:0">聊天、筆記本、AI 摘要的文字（含 API 金鑰）會先在本機用權杖當金鑰加密，再存到你 GitHub 的一個私密 Gist。權杖不會過期，所以不用像 Drive 那樣每小時重新授權；Drive 只負責圖片與附件。</p>
-    <p class="mut">取得權杖：github.com → Settings → Developer settings → Personal access tokens → <b>Tokens (classic)</b> → Generate new token (classic)，只勾 <b>gist</b>，Expiration 選 <b>No expiration</b>。（fine-grained 權杖不支援 Gist，不能用。）第二台裝置登入 Google 後按右上角 Chatnote 標誌，會自動從 Drive 取得權杖，並找到同一個 Gist。權杖會以明文放在你的 Drive，請確保 Drive 帳號安全。</p>
-    <input id="ghtok" type="password" autocomplete="off" placeholder="GitHub 權杖（ghp_…）">
-    <input id="ghpw" type="password" autocomplete="off" placeholder="舊同步密碼（選填，只有要讀取以前加密的資料才需要）" style="margin-top:8px">
-    <div class="row" style="margin-top:8px"><button class="b" id="ghsave">儲存並同步</button><button class="b g" id="ghclr">清除本機設定</button></div>
-    <div class="mut" id="ghst" style="margin-top:8px"></div>
+    <p class="mut" style="margin-top:0">圖片與附件存在這台裝置的瀏覽器裡。超過門檻的檔案，同步時不會自動下載，點開時才從 Drive 下載。「釋放本機大檔」只會清掉已確認備份在雲端的檔案，雲端那份不會被刪。填 0 代表同步時不略過任何檔案，此時「釋放」會釋放全部已備份的檔案。</p>
+    <label class="mut" style="display:flex;gap:8px;align-items:center">大檔門檻（MB）<input type="number" id="lcmax" min="0" step="1" style="width:90px"></label>
+    <div class="row" style="margin-top:8px"><button class="b g" id="lcrel">釋放本機大檔</button><button class="b g" id="lcref">更新用量</button></div>
+    <div class="mut" id="lcuse" style="margin-top:8px"></div><div class="mut" id="lcmsg" style="margin-top:4px"></div>
    </div>
   </details>
   <details class="card"><summary>Google Drive 同步</summary>
@@ -189,12 +187,14 @@ body.kbo #dock{padding-bottom:8px}
     <div class="mut gdst" id="gdstat" style="margin-top:8px"></div>
    </div>
   </details>
-  <details class="card"><summary>本機儲存空間</summary>
+  <details class="card"><summary>GitHub Gist 同步</summary>
    <div style="margin-top:10px">
-    <p class="mut" style="margin-top:0">圖片與附件存在這台裝置的瀏覽器裡。超過門檻的檔案，同步時不會自動下載，點開時才從 Drive 下載。「釋放本機大檔」只會清掉已確認備份在雲端的檔案，雲端那份不會被刪。填 0 代表同步時不略過任何檔案，此時「釋放」會釋放全部已備份的檔案。</p>
-    <label class="mut" style="display:flex;gap:8px;align-items:center">大檔門檻（MB）<input type="number" id="lcmax" min="0" step="1" style="width:90px"></label>
-    <div class="row" style="margin-top:8px"><button class="b g" id="lcrel">釋放本機大檔</button><button class="b g" id="lcref">更新用量</button></div>
-    <div class="mut" id="lcuse" style="margin-top:8px"></div><div class="mut" id="lcmsg" style="margin-top:4px"></div>
+    <p class="mut" style="margin-top:0">聊天、筆記本、AI 摘要的文字（含 API 金鑰）會先在本機用權杖當金鑰加密，再存到你 GitHub 的一個私密 Gist。權杖不會過期，所以不用像 Drive 那樣每小時重新授權；Drive 只負責圖片與附件。</p>
+    <p class="mut">取得權杖：github.com → Settings → Developer settings → Personal access tokens → <b>Tokens (classic)</b> → Generate new token (classic)，只勾 <b>gist</b>，Expiration 選 <b>No expiration</b>。（fine-grained 權杖不支援 Gist，不能用。）第二台裝置登入 Google 後按右上角 Chatnote 標誌，會自動從 Drive 取得權杖，並找到同一個 Gist。權杖會以明文放在你的 Drive，請確保 Drive 帳號安全。</p>
+    <input id="ghtok" type="password" autocomplete="off" placeholder="GitHub 權杖（ghp_…）">
+    <input id="ghpw" type="password" autocomplete="off" placeholder="舊同步密碼（選填，只有要讀取以前加密的資料才需要）" style="margin-top:8px">
+    <div class="row" style="margin-top:8px"><button class="b" id="ghsave">儲存並同步</button><button class="b g" id="ghclr">清除本機設定</button></div>
+    <div class="mut" id="ghst" style="margin-top:8px"></div>
    </div>
   </details>
   <details class="card" id="exd"><summary>匯出 CSV（Anki）</summary>
