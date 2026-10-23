@@ -119,7 +119,8 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 nav{display:none}
 #top{position:sticky;top:0;z-index:25;background:var(--bg);padding:6px 0;margin:0 0 6px;flex-wrap:nowrap;gap:6px}
 #top b{font-size:20px;padding:4px 12px 6px;flex:none;margin-left:auto}
-#tbc,#nbk{flex:none;min-width:0;width:66px;height:46px;box-sizing:border-box;padding:0 2px 3px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:1px solid #b98b55;border-radius:12px 12px 5px 5px;color:#3b2106;font-size:16px;font-weight:700;letter-spacing:1px;line-height:1;background:repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),repeating-linear-gradient(181deg,rgba(110,65,25,.05) 0 1px,transparent 1px 13px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.2)}#tbc.on,#nbk.on{border-color:#D98200;background:linear-gradient(180deg,#FFC21A,#F5A623),repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.25)}#tbc:active,#nbk:active{opacity:.75}
+#tbc,#nbk,#ebk{flex:none;min-width:0;width:66px;height:46px;box-sizing:border-box;padding:0 2px 3px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:1px solid #b98b55;border-radius:12px 12px 5px 5px;color:#3b2106;font-size:16px;font-weight:700;letter-spacing:1px;line-height:1;background:repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),repeating-linear-gradient(181deg,rgba(110,65,25,.05) 0 1px,transparent 1px 13px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.2)}#tbc.on,#nbk.on,#ebk.on{border-color:#D98200;background:linear-gradient(180deg,#FFC21A,#F5A623),repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.25)}#tbc:active,#nbk:active,#ebk:active{opacity:.75}
+#top #tbc,#top #nbk,#top #ebk{width:58px;font-size:15px;letter-spacing:0}
 #hmb{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:22px;line-height:1;padding:0;cursor:pointer}
 #mnu details{margin:0 0 6px}
 #hlist .hcur{outline:2.5px solid var(--sel);outline-offset:-1px;background:var(--selbg);border-radius:10px;padding:6px 8px}
@@ -141,7 +142,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><b>Chatnote</b></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><b>Chatnote</b></header>
 <section id="p-learn">
  <div id="chat"></div>
  <div class="mut" id="status" style="margin:0 0 8px"></div>
@@ -1745,7 +1746,7 @@ const setNav=v=>{$('#bot').classList.toggle('nvh',!v);lay()};
 function showTab(t){
   CURT=t;
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
-  $('#tbc').classList.toggle('on',t==='learn');$('#nbk').classList.toggle('on',t==='n');
+  $('#tbc').classList.toggle('on',t==='learn');$('#nbk').classList.toggle('on',t==='n');$('#ebk').classList.toggle('on',t==='e');
   ['learn','n','e','set'].forEach(x=>$('#p-'+x).classList.toggle('hide',x!==t));
   $('#dock').classList.toggle('hide',t!=='learn');lay();
   if(t==='n'||t==='e')draw(t);
@@ -1816,6 +1817,7 @@ $('#dbk').onclick=closeDrw;
 /* ===== 左上角三條線選單（取代底部分頁列）＋右上角下拉 ===== */
 const mnuClose=()=>{$('#mnu').classList.remove('open');$('#mbk').classList.add('hide')};
 $('#nbk').onclick=()=>document.querySelector('nav button[data-t="n"]').click();
+$('#ebk').onclick=()=>document.querySelector('nav button[data-t="e"]').click();
 $('#tbc').onclick=()=>{document.querySelector('nav button[data-t="learn"]').click();if(!S.hist.length&&!S.busy){const a=chats();if(a.length){loadChat(a[0].id);window.scrollTo(0,document.body.scrollHeight)}}};
 $('#hmb').onclick=()=>{document.querySelectorAll('#mnu button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===CURT));$('#mbk').classList.remove('hide');requestAnimationFrame(()=>$('#mnu').classList.add('open'))};
 $('#mbk').onclick=mnuClose;
