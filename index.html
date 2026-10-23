@@ -108,17 +108,37 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .nd{font-size:12px;color:var(--mut);margin:0 0 4px}
 .nt{display:block;font-weight:700;padding:5px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .it:has(details[open]) .nt{white-space:normal;overflow:visible}
+
+/* 頂端列：三條線選單＋右側下拉；底部分頁列改由選單切換 */
+nav{display:none}
+#top{position:sticky;top:0;z-index:25;background:var(--bg);padding:6px 0;margin:0 0 6px;flex-wrap:nowrap;gap:6px}
+#top b{font-size:20px;padding:4px 12px 6px;flex:none}
+#hmb{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:22px;line-height:1;padding:0;cursor:pointer}
+#topr{display:flex;gap:6px;margin-left:auto;min-width:0}
+#topr.hide{display:none}
+#topr details{position:static}
+#topr summary{list-style:none;cursor:pointer;padding:9px 9px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:13px;font-weight:600;white-space:nowrap;line-height:1.3}
+#topr summary::-webkit-details-marker{display:none}
+#topr summary::after{content:" ▾";color:var(--mut)}
+#topr details[open] summary{border-color:var(--sel);background:var(--selbg)}
+#topr details[open] summary::after{content:" ▴"}
+#topr .dd{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-height:70vh;max-height:70dvh;overflow:auto;z-index:26}
+#mbk{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:62}
+#mnu{position:fixed;top:0;bottom:0;left:0;width:78%;max-width:300px;background:var(--card);z-index:63;transform:translateX(-100%);visibility:hidden;transition:transform .2s,visibility .2s;padding:16px;overflow:auto;box-shadow:4px 0 16px rgba(0,0,0,.25)}
+#mnu.open{transform:none;visibility:visible}
+#mnu button{display:block;width:100%;text-align:left;padding:14px 12px;margin:0 0 6px;border:0;border-radius:10px;background:none;color:var(--fg);font-size:17px;font-weight:600;cursor:pointer}
+#mnu button.on{background:var(--selbg);color:var(--selt)}
+#dock{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+body.kbo #dock{padding-bottom:8px}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <main>
-<header id="top"><b>Chatnote</b></header>
-<section id="p-learn">
- <div class="card">
+<header id="top"><button id="hmb" aria-label="選單">☰</button><b>Chatnote</b><span id="topr">
   <details id="cfg">
-   <summary>AI 設定：<span id="cfgsum" class="mut"></span></summary>
-   <div style="margin-top:10px">
+   <summary>AI 設定</summary>
+   <div class="dd"><div class="mut" style="margin-bottom:8px">目前：<span id="cfgsum"></span></div><div style="margin-top:10px">
     <div class="row" style="margin-bottom:10px"><select id="api" style="flex:1;min-width:0"></select><button class="b g sm" id="mload" style="flex:none">🔄 讀取可用模型</button></div>
     <div id="mloadmsg" class="mut" style="margin:-4px 0 8px"></div>
     <div class="row" style="margin-bottom:10px">
@@ -128,17 +148,18 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     </div>
     <div class="row"><span class="mut">用途</span><select id="mode" style="flex:1;min-width:0"><option value="q">題目討論（任何科目）</option><option value="o">優惠整理（QR、海報、截圖）</option></select></div>
    </div>
-  <p class="mut">每拍一張圖就是新的一題，AI 記得前面的討論。按住訊息 1 秒可框選部分文字（可複製、貼上到輸入框）；輕點訊息即可整則選取（可複選，再點一次取消；也可按「取消選取」，或點空白處取消）；再按下方「存筆記」（原文存入）或「AI筆記」（AI 摘要）；每則訊息底下也有單獨的按鈕（複製、引用、編輯你的訊息後重送、存成筆記、AI筆記、檢索筆記本、重整）。要開新聊天或切換聊天，請長按最底下的「聊天」1 秒。存入時會讓你選資料夾（會記住上次的選擇）。聊天紀錄會存在這台裝置，並在你改動後自動隨 Google Drive 同步（多個帳號會依時間合併）。聊天裡夾帶的圖片只留在原裝置，換裝置時會顯示「圖片僅存在原裝置」；存成筆記的圖片則會一起同步。可用「附件」夾帶圖片、PDF（Gemini／Claude）或文字檔，也可以只送文字。</p>
+  <p class="mut">每拍一張圖就是新的一題，AI 記得前面的討論。按住訊息 1 秒可框選部分文字（可複製、貼上到輸入框）；輕點訊息即可整則選取（可複選，再點一次取消；也可按「取消選取」，或點空白處取消）；再按下方「存筆記」（原文存入）或「AI筆記」（AI 摘要）；每則訊息底下也有單獨的按鈕（複製、引用、編輯你的訊息後重送、存成筆記、AI筆記、檢索筆記本、重整）。要開新聊天或切換聊天，請點左上角的三條線 ☰，選「新聊天」或「最近聊天」。存入時會讓你選資料夾（會記住上次的選擇）。聊天紀錄會存在這台裝置，並在你改動後自動隨 Google Drive 同步（多個帳號會依時間合併）。聊天裡夾帶的圖片只留在原裝置，換裝置時會顯示「圖片僅存在原裝置」；存成筆記的圖片則會一起同步。可用「附件」夾帶圖片、PDF（Gemini／Claude）或文字檔，也可以只送文字。</p></div>
   </details>
-  <details id="hist"><summary>聊天紀錄（<span id="hcnt">0</span>）</summary><div id="hlist" style="margin-top:8px"></div></details>
- </div>
+  <details id="hist"><summary>聊天紀錄（<span id="hcnt">0</span>）</summary><div id="hlist" class="dd"></div></details>
+</span></header>
+<section id="p-learn">
  <div id="chat"></div>
  <div class="mut" id="status" style="margin:0 0 8px"></div>
 </section>
 <section id="p-n" class="hide"></section>
 <section id="p-e" class="hide"></section>
 <section id="p-set" class="hide">
- <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-f</div>
+ <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-g</div>
  <div id="s-home">
   <div class="card"><button class="b" id="glogin" style="width:100%">Google 登入</button><div class="mut" id="gdcur" style="margin-top:8px;word-break:break-all"></div></div>
   <details class="card"><summary>帳號管理</summary>
@@ -201,6 +222,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 </div></div>
 <nav><button data-t="learn" class="on">聊天</button><button data-t="n">筆記本</button><button data-t="e">AI 摘要</button><button data-t="set">設定</button></nav></div><div id="cmenu" class="hide"><button id="reset">新聊天</button><button id="swc">切換聊天</button></div>
 <div id="dbk" class="hide"></div><aside id="drw"></aside>
+<div id="mbk" class="hide"></div><aside id="mnu"><h3 style="margin:0 0 10px">Chatnote</h3><button data-go="new">＋ 新聊天</button><button data-go="swc">最近聊天</button><hr style="border:0;border-top:1px solid var(--bd);margin:8px 0"><button data-t="learn">聊天</button><button data-t="n">筆記本</button><button data-t="e">AI 摘要</button><button data-t="set">設定</button></aside>
 <div id="pg" class="hide" role="status" aria-live="polite"><div class="t"><span id="pgl"></span><b id="pgr"></b></div><div class="tr"><div id="pgf" class="fl"></div></div></div>
 <div id="sbar"><div id="sth"></div></div><div id="jmp"><button id="jt" aria-label="到最上面">▲</button><button id="jb" aria-label="到最下面">▼</button></div>
 
@@ -1637,7 +1659,7 @@ async function reconcileShares(fid){
 }
 $('#gdsync').onclick=()=>gdSync();
 /* ===== 底部固定列高度（學習列＋按鈕列），讓內容不被擋住 ===== */
-let NAVH=56,KB=false,CURT='learn';
+let NAVH=0,KB=false,KBT=0,CURT='learn';
 const lay=()=>{const r=document.documentElement.style,nh=$('nav').offsetHeight;if(nh)NAVH=nh;r.setProperty('--bt',$('#bot').offsetHeight+'px');r.setProperty('--bh',(NAVH+$('#dock').offsetHeight)+'px')};
 if(window.ResizeObserver){new ResizeObserver(lay).observe($('#bot'))}
 window.addEventListener('resize',lay);lay();
@@ -1646,7 +1668,7 @@ function showTab(t){
   CURT=t;
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
   ['learn','n','e','set'].forEach(x=>$('#p-'+x).classList.toggle('hide',x!==t));
-  $('#dock').classList.toggle('hide',t!=='learn');lay();
+  $('#dock').classList.toggle('hide',t!=='learn');$('#topr').classList.toggle('hide',t!=='learn');['cfg','hist'].forEach(i=>$('#'+i).open=false);lay();
   if(t==='n'||t==='e')draw(t);
   if(t==='set'){goHome();exFill()}
 }
@@ -1667,8 +1689,8 @@ window.addEventListener('popstate',e=>{
 });
 /* 鍵盤：輸入框取得焦點時收起分頁列；iOS 等不縮放版面的瀏覽器用 visualViewport 補償 */
 const isTxt=el=>!!(el&&el.matches&&el.matches('textarea,input:not([type=checkbox]):not([type=radio]):not([type=file])'));
-document.addEventListener('focusin',e=>{if(isTxt(e.target)){KB=true;setNav(false)}});
-document.addEventListener('focusout',()=>setTimeout(()=>{if(!isTxt(document.activeElement)){KB=false;setNav(true)}},150));
+document.addEventListener('focusin',e=>{if(isTxt(e.target)){KB=true;KBT=Date.now();document.body.classList.add('kbo');setNav(false)}});
+document.addEventListener('focusout',()=>setTimeout(()=>{if(!isTxt(document.activeElement)){KB=false;document.body.classList.remove('kbo');setNav(true)}},150));
 if(window.visualViewport){const vv=visualViewport,u=()=>{const off=Math.max(0,Math.round(innerHeight-vv.height-vv.offsetTop));document.documentElement.style.setProperty('--kb',off+'px');lay()};vv.addEventListener('resize',u);vv.addEventListener('scroll',u);u()}
 /* 捲動：往下滑隱藏分頁列、往上滑顯示；右側粗捲軸＋到最上／最下按鈕 */
 {const sb=$('#sbar'),th=$('#sth'),jm=$('#jmp');let hT=0,drag=null,ly=window.scrollY;
@@ -1687,8 +1709,8 @@ if(window.visualViewport){const vv=visualViewport,u=()=>{const off=Math.max(0,Ma
  const kick=()=>{clearTimeout(hT);if(drag)return;hT=setTimeout(()=>{sb.classList.remove('v');jm.classList.remove('v')},1800)};
  addEventListener('scroll',()=>{
   const y=scrollY,d=y-ly;
-  if(!KB&&Math.abs(d)>6){if(d>0&&y>80)setNav(false);else if(d<0)setNav(true);ly=y}
-  if(y<40)setNav(true);
+  if(Math.abs(d)>6){if(!KB||Date.now()-KBT>800){if(d>0&&(y>80||KB))setNav(false);else if(d<0)setNav(true)}ly=y}
+  if(y<40&&!KB)setNav(true);
   upd();kick();
  },{passive:true});
  th.addEventListener('pointerdown',e=>{e.preventDefault();th.setPointerCapture(e.pointerId);drag={y:e.clientY,s:scrollY};clearTimeout(hT)});
@@ -1707,11 +1729,22 @@ function closeDrwUI(){$('#drw').classList.remove('open');$('#dbk').classList.add
 function closeDrw(){closeDrwUI();ovClose()}
 function openDrw(){
   const a=chats().slice(0,3);
-  $('#drw').innerHTML='<h3>最近的聊天</h3>'+(a.length?a.map(c=>'<div class="it" data-ci="'+c.id+'"><b class="tt">'+(c.id===S.cid?'✓ ':'')+esc(c.title)+'</b><br><span class="mut">'+esc(new Date(c.ts).toLocaleString('zh-TW'))+'・'+c.hist.length+' 則</span></div>').join(''):'<p class="mut">還沒有聊天紀錄。</p>')+'<p class="mut">更早的紀錄在聊天頁「AI 設定」下方的「聊天紀錄」。</p>';
+  $('#drw').innerHTML='<h3>最近的聊天</h3>'+(a.length?a.map(c=>'<div class="it" data-ci="'+c.id+'"><b class="tt">'+(c.id===S.cid?'✓ ':'')+esc(c.title)+'</b><br><span class="mut">'+esc(new Date(c.ts).toLocaleString('zh-TW'))+'・'+c.hist.length+' 則</span></div>').join(''):'<p class="mut">還沒有聊天紀錄。</p>')+'<p class="mut">更早的紀錄在右上角的「聊天紀錄」。</p>';
   ovOpen();$('#dbk').classList.remove('hide');requestAnimationFrame(()=>$('#drw').classList.add('open'));
 }
 $('#swc').onclick=()=>{$('#cmenu').classList.add('hide');document.querySelector('nav button[data-t="learn"]').click();openDrw()};
 $('#dbk').onclick=closeDrw;
+/* ===== 左上角三條線選單（取代底部分頁列）＋右上角下拉 ===== */
+const mnuClose=()=>{$('#mnu').classList.remove('open');$('#mbk').classList.add('hide')};
+$('#hmb').onclick=()=>{['cfg','hist'].forEach(i=>$('#'+i).open=false);document.querySelectorAll('#mnu button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===CURT));$('#mbk').classList.remove('hide');requestAnimationFrame(()=>$('#mnu').classList.add('open'))};
+$('#mbk').onclick=mnuClose;
+$('#mnu').onclick=e=>{const b=e.target.closest('button');if(!b)return;mnuClose();
+  if(b.dataset.t)document.querySelector('nav button[data-t="'+b.dataset.t+'"]').click();
+  else if(b.dataset.go==='new')$('#reset').click();
+  else if(b.dataset.go==='swc')$('#swc').click()};
+window.addEventListener('popstate',mnuClose);
+['cfg','hist'].forEach(i=>$('#'+i).addEventListener('toggle',()=>{if($('#'+i).open)['cfg','hist'].filter(x=>x!==i).forEach(x=>{$('#'+x).open=false})}));
+document.addEventListener('click',e=>{if(!e.target.closest('#top'))['cfg','hist'].forEach(i=>{$('#'+i).open=false})});
 $('#drw').onclick=e=>{const t=e.target.closest('[data-ci]');if(!t)return;closeDrw();loadChat(t.dataset.ci);if(!S.busy)window.scrollTo(0,document.body.scrollHeight)};
 </script>
 </body>
