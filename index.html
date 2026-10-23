@@ -102,6 +102,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #jmp{position:fixed;right:42px;bottom:calc(var(--bt,56px) + var(--kb,0px) + 14px);z-index:29;display:flex;flex-direction:column;gap:10px;opacity:0;pointer-events:none;transition:opacity .25s}
 #jmp.v{opacity:1;pointer-events:auto}
 #jmp button{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--acc);background:var(--card);color:var(--acc);font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.25);padding:0}
+@media (hover:hover) and (pointer:fine){#sbar,#jmp{display:none!important}}
 
 .xw{position:relative}
 .xw>.xb{display:none;position:absolute;right:6px;top:7px;width:30px;height:30px;padding:0;border:none;border-radius:50%;background:var(--bd);color:var(--fg);font-size:14px;line-height:1;z-index:2}
