@@ -118,7 +118,8 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   <details id="cfg">
    <summary>AI 設定：<span id="cfgsum" class="mut"></span></summary>
    <div style="margin-top:10px">
-    <div class="row" style="margin-bottom:10px"><select id="api" style="flex:1;min-width:0"></select></div>
+    <div class="row" style="margin-bottom:10px"><select id="api" style="flex:1;min-width:0"></select><button class="b g sm" id="mload" style="flex:none">🔄 讀取可用模型</button></div>
+    <div id="mloadmsg" class="mut" style="margin:-4px 0 8px"></div>
     <div class="row" style="margin-bottom:10px">
      <select id="msel" style="flex:1;min-width:0"></select>
      <input id="lmodel" placeholder="輸入模型名稱" class="hide" style="flex:1;min-width:0" autocomplete="off">
@@ -1099,7 +1100,7 @@ function fillApis(){
   const a=apis(),c=cur();
   $('#api').innerHTML=a.length?a.map(x=>'<option value="'+x.id+'">'+esc(label(x))+'</option>').join(''):'<option value="">尚未新增 API（到設定新增）</option>';
   if(c)$('#api').value=c.id;
-  const ml=c?P[c.p].m:[],cm=c?(c.model||''):'';
+  const ml=c?((c.models&&c.models.length)?c.models:P[c.p].m):[],cm=c?(c.model||''):'';
   const noList=!ml.length,custom=S.cm&&!noList;
   $('#lmodel').value=cm;$('#lmodel').disabled=!c;
   $('#msel').classList.toggle('hide',noList);
@@ -1111,6 +1112,30 @@ function fillApis(){
   $('#managelist').innerHTML=a.length?a.map(x=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span><b>'+esc(P[x.p].n)+'</b>'+(x.name?' · '+esc(x.name):'')+' <span class="mut">…'+esc(x.key.slice(-4))+'</span></span><button class="b g" style="padding:6px 12px" data-rm="'+x.id+'">移除</button></div>').join(''):'<p class="mut">沒有可管理的 API。</p>';
   cfgSum();
 }
+async function fetchModels(x){
+  let url,h={},pick;
+  if(x.p==='gemini'){url='https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key='+encodeURIComponent(x.key);
+    pick=j=>(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace(/^models\//,'')).filter(n=>/^gemini/i.test(n)&&!/embed|aqa|tts|image|imagen|live|audio|robotics|computer-use/i.test(n))}
+  else if(x.p==='claude'){url='https://api.anthropic.com/v1/models?limit=1000';h={'x-api-key':x.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};pick=j=>(j.data||[]).map(m=>m.id)}
+  else{const b=(x.p==='compat'?x.base:'https://api.openai.com/v1').trim().replace(/\/+$/,'');url=b+'/models';h={Authorization:'Bearer '+x.key};pick=j=>(j.data||[]).map(m=>m.id).filter(n=>!/embed|whisper|tts|dall|moderation|image|audio|realtime/i.test(n))}
+  const r=await fetch(url,{headers:h});
+  if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}throw new Error((r.status===400||r.status===401||r.status===403?'金鑰無效或沒有權限':'錯誤 '+r.status)+(m?'：'+m.slice(0,80):''))}
+  const l=[...new Set(pick(await r.json()))].sort((a,b)=>b.localeCompare(a,'en',{numeric:true}));
+  if(!l.length)throw new Error('這組金鑰沒有查到可用模型');
+  return l;
+}
+async function loadModels(id,quiet){
+  const a=apis(),x=a.find(y=>y.id===id);if(!x)return;
+  const msg=$('#mloadmsg'),btn=$('#mload');
+  if(!quiet){btn.disabled=true;msg.textContent='讀取中…'}
+  try{
+    const l=await fetchModels(x);x.models=l;
+    if(!x.model||(!l.includes(x.model)&&P[x.p].m.includes(x.model)))x.model=l.includes(P[x.p].d)?P[x.p].d:(l.find(n=>/flash/i.test(n)&&!/lite/i.test(n))||l[0]);
+    saveApis(a);fillApis();msg.textContent='已讀取 '+l.length+' 個可用模型（'+new Date().toLocaleTimeString('zh-TW')+'）';
+  }catch(e){msg.textContent='讀取模型失敗：'+e.message+(quiet?'（先使用內建清單）':'')}
+  btn.disabled=false;
+}
+$('#mload').onclick=()=>{const c=cur();if(c)loadModels(c.id);else $('#mloadmsg').textContent='請先新增 API'};
 function setAct(id){S.cm=false;ls.set('oc_act',id);fillApis()}
 $('#api').onchange=()=>setAct($('#api').value);
 $('#uselist').onchange=e=>{if(e.target.name==='useapi')setAct(e.target.value)};
@@ -1136,6 +1161,7 @@ $('#nadd').onclick=()=>{
   ['nkey','nbase','nname'].forEach(i=>$('#'+i).value='');
   $('#nmsg').textContent='已新增並設為使用中，請到「聊天」頁確認模型';
   fillApis();
+  loadModels(x.id,true);
 };
 const goHome=()=>{$('#s-manage').classList.add('hide');$('#s-home').classList.remove('hide')};
 $('#gomanage').onclick=()=>{try{history.pushState({t:'set',sm:1},'')}catch(e){}$('#s-home').classList.add('hide');$('#s-manage').classList.remove('hide');window.scrollTo(0,0)};
