@@ -118,7 +118,6 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 nav{display:none}
 #top{position:sticky;top:0;z-index:25;background:var(--bg);padding:6px 0;margin:0 0 6px;flex-wrap:nowrap;gap:6px}
 #top b{font-size:20px;padding:4px 12px 6px;flex:none;margin-left:auto}
-#tbc,#nbk{flex:none;min-width:0;width:66px;height:46px;box-sizing:border-box;padding:0 2px 3px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:1px solid #b98b55;border-radius:12px 12px 5px 5px;color:#3b2106;font-size:16px;font-weight:700;letter-spacing:1px;line-height:1;background:repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),repeating-linear-gradient(181deg,rgba(110,65,25,.05) 0 1px,transparent 1px 13px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.2)}#tbc.on,#nbk.on{border-color:#D98200;background:linear-gradient(180deg,#FFC21A,#F5A623),repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.25)}#tbc:active,#nbk:active{opacity:.75}
 #hmb{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:22px;line-height:1;padding:0;cursor:pointer}
 #mnu details{margin:0 0 6px}
 #hlist .hcur{outline:2.5px solid var(--sel);outline-offset:-1px;background:var(--selbg);border-radius:10px;padding:6px 8px}
@@ -140,7 +139,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><b>Chatnote</b></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><b>Chatnote</b></header>
 <section id="p-learn">
  <div id="chat"></div>
  <div class="mut" id="status" style="margin:0 0 8px"></div>
@@ -204,7 +203,7 @@ body.kbo #dock{padding-bottom:8px}
 </main>
 <div id="mdl" class="hide"><div class="mbox" id="mbox"></div></div>
 <div id="bot"><div id="dock"><div class="dk">
- <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selclr">取消選取</button><button class="b g sm" id="snipclr">取消框選</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
+ <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selclr">取消選取</button><button class="b g sm" id="snipclr">取消選取</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
  <div id="qbox" class="hide"><div class="qtx" id="qtx"></div><button id="qx" aria-label="取消引用">✕</button></div>
  <div id="attbox" class="row hide" style="margin:0 0 6px"></div>
  <div class="row" style="flex-wrap:nowrap;margin:0;align-items:flex-end;gap:6px"><label class="plus" aria-label="上傳附件">+<input id="attf" type="file" multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.html,.xml,.log,.js,.py,.css,.ts,.yml,.yaml,text/*" hidden></label><span class="xw" style="flex:1;min-width:0;display:block"><textarea id="q" rows="1" placeholder="輸入訊息…"></textarea><button type="button" class="xb" aria-label="清除全部">✕</button></span><button class="b" id="send" style="flex:none">拍照</button><input id="cam" type="file" accept="image/*" capture="environment" hidden></div>
@@ -813,6 +812,15 @@ $('#mdl').onclick=async e=>{
     if(!pk.length&&!sx.length){alert('請先長按選取要整併的筆記或原訊息');return}
     closeMdl();aiNote(sx.length?sx:FD.ix,pk,S.snip);return;
   }
+  if(id==='pkgo'&&MD&&MD.kind==='pick'){
+    const k=MD.k,bx=[...document.querySelectorAll('#mbox input[data-pc]:checked')],nb=[...document.querySelectorAll('#mbox input[data-pn]:checked')];
+    if(!bx.length&&!nb.length){alert('請至少勾選一則聊天訊息或筆記');return}
+    const by={};bx.forEach(c=>{(by[c.dataset.pc]=by[c.dataset.pc]||[]).push(+c.dataset.pi)});
+    const cs=chats(),all=notes(),parts=[];
+    Object.keys(by).forEach(cid=>{const c=cs.find(x=>x.id===cid);if(!c)return;parts.push('《聊天：'+tex(titleOf(c.hist))+'》\n'+by[cid].sort((a,b)=>a-b).map(i=>who(c.hist[i])+'：'+tex(txt(c.hist[i]))).join('\n'))});
+    nb.forEach(c=>{const n=all.find(x=>x.id===c.dataset.pn);if(n)parts.push('《筆記：'+tex(n.title)+'》\n'+tex(n.body))});
+    closeMdl();pickMerge(k,parts.join('\n\n').slice(0,30000),bx.length+nb.length);return;
+  }
   if(id==='zt'){const im=$('#zimg');if(!im)return;const big=im.style.width!=='250%';im.style.width=big?'250%':'100%';$('#zt').textContent=big?'縮小':'放大';return}
   if(id==='msv'&&MD){
     const title=$('#mt').value.trim();if(!title){alert('請輸入標題');return}
@@ -833,6 +841,7 @@ $('#mdl').onclick=async e=>{
 };
 $('#mdl').onchange=e=>{
   if(e.target.id==='mkind'){const k=e.target.value;$('#mf').innerHTML=folderOpts(k,last()[k])}
+  if(e.target.dataset.pg!==undefined){e.target.closest('details').querySelectorAll('input[data-pc],input[data-pn]').forEach(c=>c.checked=e.target.checked)}
 };
 
 /* ===== 筆記本／AI 摘要（共用） ===== */
@@ -855,7 +864,7 @@ function draw(k){
   const bar='';
   let h,d;
   if(fid){
-    h='<div class="hd"><button class="b g sm" data-a="up">‹ 上一層資料夾</button></div><h3>📁 '+esc(cf.name)+'</h3><div class="row" style="margin-bottom:10px"><button class="b sm" data-a="nn">＋新增筆記</button><label class="b sm">＋上傳檔案（任何類型）<input id="up'+k+'" type="file" multiple hidden></label></div>';
+    h='<div class="hd"><button class="b g sm" data-a="up">‹ 上一層資料夾</button></div><h3>📁 '+esc(cf.name)+'</h3><div class="row" style="margin-bottom:10px">'+(k==='e'?'<button class="b sm" data-a="pk">＋挑選內容 AI 整併</button>':'<button class="b sm" data-a="nn">＋新增筆記</button>')+'<label class="b sm">＋上傳檔案（任何類型）<input id="up'+k+'" type="file" multiple hidden></label></div>';
     const r=N.filter(n=>n.fid===fid&&hit(n));
     d=list(r)+(q&&!r.length?'<button class="b g sm" data-a="gs">改搜全部資料夾</button>':'');
   }else if(!q){
@@ -906,6 +915,34 @@ async function aiMerge(k){
     const rec={title:o.title||sel[0].title,body:Array.isArray(o.body)?o.body.join('\n'):(o.body||''),kws:clean([...(o.kws||[]),...sel.flatMap(x=>x.kws||[])])};
     AP={k,ids,rec};
     $('#ap'+k).innerHTML='<div class="card"><b>'+(sel.length===1?'摘要結果':'整併摘要結果')+'（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(rec.body))+'</div><p>存到AI 摘要資料夾：<select>'+folderOpts('e',last().e)+'</select></p>'+(k==='e'?'<p class="mut">存入後會移除被整併的 '+sel.length+' 則。</p>':'')+'<div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
+  }catch(e){$('#ap'+k).innerHTML='<p>'+errH(e)+'</p>'}
+}
+function openPick(k){
+  const cs=chats(),F=folds(),N=notes(),TN={n:'筆記本',e:'AI 摘要'};
+  const grp=(ttl,inner)=>'<details style="margin:4px 0"><summary style="display:flex;gap:8px;align-items:center;list-style:none"><input type="checkbox" data-pg="1" style="width:22px;flex:none"><span>'+ttl+'</span></summary><div style="margin-left:6px">'+inner+'</div></details>';
+  const row=(attr,t)=>'<label style="display:flex;gap:10px;align-items:flex-start;margin:6px 0"><input type="checkbox" '+attr+' style="width:22px;flex:none;margin-top:4px"><span>'+t+'</span></label>';
+  const chHtml=cs.length?cs.map(c=>{
+    const rows=c.hist.map((h,i)=>({h,i,t:tex(txt(h)).split(PHT).join('').trim()})).filter(r=>r.t);
+    return grp('💬 '+esc(titleOf(c.hist))+' <span class="mut">（'+rows.length+' 則）</span>',rows.map(r=>row('data-pc="'+c.id+'" data-pi="'+r.i+'"','<b>'+who(r.h)+'</b>：'+esc(r.t.length>140?r.t.slice(0,140)+'…':r.t))).join(''));
+  }).join(''):'<p class="mut">還沒有聊天紀錄。</p>';
+  const nHtml=['n','e'].map(kk=>F.filter(f=>f.k===kk).map(f=>{
+    const a=N.filter(n=>n.fid===f.id);if(!a.length)return '';
+    return grp('📁 '+TN[kk]+' / '+esc(f.name)+' <span class="mut">（'+a.length+'）</span>',a.map(n=>row('data-pn="'+n.id+'"',esc(tex(n.title)))).join(''));
+  }).join('')).join('')||'<p class="mut">還沒有筆記。</p>';
+  const bx='<div style="max-height:34vh;overflow:auto;border:1px solid var(--bd);border-radius:8px;padding:6px">';
+  openMdl('<h3>挑選要整併的內容</h3><p class="mut" style="margin:0 0 8px">展開後勾選單則訊息或筆記，也可以勾資料夾或整串聊天一次全選。</p><b>聊天紀錄</b>'+bx+chHtml+'</div><b style="display:block;margin-top:10px">現有筆記</b>'+bx+nHtml+'</div><div class="row" style="margin-top:12px"><button class="b" id="pkgo">AI 整併</button><button class="b g" id="mcx">取消</button></div>');
+  MD={kind:'pick',k};
+}
+async function pickMerge(k,src,cnt){
+  $('#ap'+k).innerHTML='<p class="mut">AI 整併中…</p>';
+  try{
+    const today='（今天是'+new Date().toLocaleDateString('zh-TW')+'）';
+    const pr='以下是我挑選的 '+cnt+' 份內容（聊天訊息與筆記），請整併成一則「AI 摘要」：合併相同主題、去除重複與矛盾處（有矛盾時註明）、保留重點與易錯點，依主題分組、條列式、白話。優惠類請列出店家、期限與條件，已過期的標註'+today+'。只輸出 JSON：{"title":"AI 摘要標題","kws":["關鍵字"],"body":"條列式內容（300 字內）"}\n\n'+src;
+    const o=jparse(await call([{role:'user',parts:[{text:pr}]}],SYS2,true));
+    const rec={title:o.title||'AI 摘要',body:Array.isArray(o.body)?o.body.join('\n'):(o.body||''),kws:clean(o.kws||[])};
+    AP={k,ids:[],rec};
+    $('#ap'+k).innerHTML='<div class="card"><b>整併結果（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(rec.body))+'</div><p>存到 AI 摘要資料夾：<select>'+folderOpts('e',V.e||last().e)+'</select></p><p class="mut">原本挑選的聊天與筆記都不會被動到。</p><div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
+    $('#ap'+k).scrollIntoView({behavior:'smooth',block:'start'});
   }catch(e){$('#ap'+k).innerHTML='<p>'+errH(e)+'</p>'}
 }
 async function lazyThumbs(k){
@@ -984,6 +1021,7 @@ async function zoomImg(nid){showGal(nid,0)}
   }
   else if(a==='zoom')zoomImg(i);
   else if(a==='zoomf')zoomF(i,t.dataset.j);
+  else if(a==='pk')openPick(k);
   else if(a==='nn')openEd(k,null);
   else if(a==='en')openEd(k,i);
   else if(a==='sa'){const cs=[...document.querySelectorAll('#p-'+k+' .selitem')],all=cs.length&&cs.every(c=>c.classList.contains('sel'));cs.forEach(c=>c.classList.toggle('sel',!all));nbar(k)}
@@ -1107,7 +1145,7 @@ async function aiTK(tEl,kEl,bEl,btn){
 }
 const ntime=n=>{
   const c=parseInt(String(n.id).slice(0,8),36),ok=c>1.5e12&&c<4e12,cs=ok?new Date(c).toLocaleString('zh-TW'):(n.date||'');
-  return n.et?'<div>修改 '+esc(new Date(n.et).toLocaleString('zh-TW'))+'</div>':'<div>建立 '+esc(cs)+'</div>';
+  return '<div>🕘 建立 '+esc(cs)+'</div>'+(n.et?'<div>✎ 修改 '+esc(new Date(n.et).toLocaleString('zh-TW'))+'</div>':'');
 };
 const atts=n=>[...(n.file?[{iid:n.iid,name:n.file.name,type:n.file.type,size:n.file.size}]:[]),...(n.files||[])];
 const FB=n=>{const a=atts(n);return a.length?'<div class="act">'+a.map((f,j)=>'<button data-a="fo" data-i="'+n.id+'" data-j="'+j+'">📎 '+esc(f.name)+'（'+Math.max(1,Math.round((f.size||0)/1024))+' KB）</button>').join('')+'</div>':''};
@@ -1705,7 +1743,6 @@ const setNav=v=>{$('#bot').classList.toggle('nvh',!v);lay()};
 function showTab(t){
   CURT=t;
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
-  $('#tbc').classList.toggle('on',t==='learn');$('#nbk').classList.toggle('on',t==='n');
   ['learn','n','e','set'].forEach(x=>$('#p-'+x).classList.toggle('hide',x!==t));
   $('#dock').classList.toggle('hide',t!=='learn');lay();
   if(t==='n'||t==='e')draw(t);
@@ -1775,8 +1812,6 @@ $('#swc').onclick=()=>{$('#cmenu').classList.add('hide');document.querySelector(
 $('#dbk').onclick=closeDrw;
 /* ===== 左上角三條線選單（取代底部分頁列）＋右上角下拉 ===== */
 const mnuClose=()=>{$('#mnu').classList.remove('open');$('#mbk').classList.add('hide')};
-$('#nbk').onclick=()=>document.querySelector('nav button[data-t="n"]').click();
-$('#tbc').onclick=()=>{document.querySelector('nav button[data-t="learn"]').click();if(!S.hist.length&&!S.busy){const a=chats();if(a.length){loadChat(a[0].id);window.scrollTo(0,document.body.scrollHeight)}}};
 $('#hmb').onclick=()=>{document.querySelectorAll('#mnu button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===CURT));$('#mbk').classList.remove('hide');requestAnimationFrame(()=>$('#mnu').classList.add('open'))};
 $('#mbk').onclick=mnuClose;
 $('#mnu').onclick=e=>{const b=e.target.closest('button[data-t],button[data-go]');if(!b)return;mnuClose();
