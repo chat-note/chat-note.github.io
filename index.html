@@ -127,7 +127,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     </div>
     <div class="row"><span class="mut">用途</span><select id="mode" style="flex:1;min-width:0"><option value="q">題目討論（任何科目）</option><option value="o">優惠整理（QR、海報、截圖）</option></select></div>
    </div>
-  <p class="mut">每拍一張圖就是新的一題，AI 記得前面的討論。按住訊息 1 秒可框選部分文字（可複製、貼上到輸入框）；輕點訊息即可整則選取（可複選，再點一次取消；點空白處可取消全部選取或框選）；再按下方「存筆記」（原文存入）或「AI筆記」（AI 摘要）；每則訊息底下也有單獨的按鈕（複製、引用、編輯你的訊息後重送、存成筆記、AI筆記、檢索筆記本、重整）。要開新聊天或切換聊天，請長按最底下的「聊天」1 秒。存入時會讓你選資料夾（會記住上次的選擇）。聊天紀錄會存在這台裝置，並在你改動後自動隨 Google Drive 同步（多個帳號會依時間合併）。聊天裡夾帶的圖片只留在原裝置，換裝置時會顯示「圖片僅存在原裝置」；存成筆記的圖片則會一起同步。可用「附件」夾帶圖片、PDF（Gemini／Claude）或文字檔，也可以只送文字。</p>
+  <p class="mut">每拍一張圖就是新的一題，AI 記得前面的討論。按住訊息 1 秒可框選部分文字（可複製、貼上到輸入框）；輕點訊息即可整則選取（可複選，再點一次取消；也可按「取消選取」，或點空白處取消）；再按下方「存筆記」（原文存入）或「AI筆記」（AI 摘要）；每則訊息底下也有單獨的按鈕（複製、引用、編輯你的訊息後重送、存成筆記、AI筆記、檢索筆記本、重整）。要開新聊天或切換聊天，請長按最底下的「聊天」1 秒。存入時會讓你選資料夾（會記住上次的選擇）。聊天紀錄會存在這台裝置，並在你改動後自動隨 Google Drive 同步（多個帳號會依時間合併）。聊天裡夾帶的圖片只留在原裝置，換裝置時會顯示「圖片僅存在原裝置」；存成筆記的圖片則會一起同步。可用「附件」夾帶圖片、PDF（Gemini／Claude）或文字檔，也可以只送文字。</p>
   </details>
   <details id="hist"><summary>聊天紀錄（<span id="hcnt">0</span>）</summary><div id="hlist" style="margin-top:8px"></div></details>
  </div>
@@ -193,11 +193,10 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 </main>
 <div id="mdl" class="hide"><div class="mbox" id="mbox"></div></div>
 <div id="bot"><div id="dock"><div class="dk">
- <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
+ <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selclr">取消選取</button><button class="b g sm" id="snipclr">取消框選</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
  <div id="qbox" class="hide"><div class="qtx" id="qtx"></div><button id="qx" aria-label="取消引用">✕</button></div>
  <div id="attbox" class="row hide" style="margin:0 0 6px"></div>
  <div class="row" style="flex-wrap:nowrap;margin:0;align-items:flex-end;gap:6px"><label class="plus" aria-label="上傳附件">+<input id="attf" type="file" multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.html,.xml,.log,.js,.py,.css,.ts,.yml,.yaml,text/*" hidden></label><span class="xw" style="flex:1;min-width:0;display:block"><textarea id="q" rows="1" placeholder="輸入訊息…"></textarea><button type="button" class="xb" aria-label="清除全部">✕</button></span><button class="b" id="send" style="flex:none">拍照</button><input id="cam" type="file" accept="image/*" capture="environment" hidden></div>
- <div class="row hide" id="qcrow" style="margin:6px 0 0;justify-content:flex-end"><button class="b g sm" id="qcancel">取消</button></div>
 </div></div>
 <nav><button data-t="learn" class="on">聊天</button><button data-t="n">筆記本</button><button data-t="e">AI 摘要</button><button data-t="set">設定</button></nav></div><div id="cmenu" class="hide"><button id="reset">新聊天</button><button id="swc">切換聊天</button></div>
 <div id="dbk" class="hide"></div><aside id="drw"></aside>
@@ -440,7 +439,7 @@ function render(noScroll){
   markSel();
   if(!noScroll)window.scrollTo(0,document.body.scrollHeight);
 }
-function busy(b,msg){S.busy=b;$('#qcrow').classList.toggle('hide',!b);['send','sum','aib'].forEach(i=>$('#'+i).disabled=b);$('#status').innerHTML=msg||''}
+function busy(b,msg){S.busy=b;['sum','aib'].forEach(i=>$('#'+i).disabled=b);$('#send').disabled=false;updSend();$('#status').innerHTML=msg||''}
 async function ask(){
   const t0=Date.now();let th='';
   const tick=()=>{const sec=Math.round((Date.now()-t0)/1000);$('#status').innerHTML=esc(provName())+' 運作中… 已等待 '+sec+' 秒'+(th?'<br><span class="mut">'+esc(th.slice(-100).replace(/\s+/g,' '))+'</span>':'')};
@@ -468,9 +467,9 @@ document.addEventListener('click',e=>{if(!e.target.closest('#cmenu')&&Date.now()
 $('#reset').onclick=()=>{document.querySelector('nav button[data-t="learn"]').click();clearQuote();S.att=[];drawAtt();$('#cmenu').classList.add('hide');if(S.ctl)S.ctl.abort('user');S.hist=[];S.cid=null;S.thumb=null;S.start=0;S.pend=null;S.sel.clear();S.snip='';$('#status').textContent='';render();drawHist()};
 const autoH=()=>{const q=$('#q');q.style.height='auto';q.style.height=Math.min(q.scrollHeight,120)+'px'};
 const xRef=r=>(r||document).querySelectorAll('.xw').forEach(w=>{const f=w.querySelector('input,textarea');if(f)w.classList.toggle('hx',!!f.value)});
-const updSend=()=>{xRef($('#dock'));$('#send').textContent=($('#q').value.trim()||S.att.length)?'送出':'拍照'};
+const updSend=()=>{xRef($('#dock'));$('#send').classList.toggle('g',!!S.busy);$('#send').textContent=S.busy?'取消':($('#q').value.trim()||S.att.length)?'送出':'拍照'};
 $('#q').addEventListener('input',()=>{autoH();updSend()});
-$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('#send').click()}});
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();if(!S.busy)$('#send').click()}});
 function drawAtt(){const b=$('#attbox');b.classList.toggle('hide',!S.att.length);b.innerHTML=S.att.map((a,i)=>'<span class="tag" style="margin:0;border-color:var(--acc);color:var(--fg)">'+(a.kind==='img'?'🖼 ':'📎 ')+esc(a.name.slice(0,18))+' <b data-ax="'+i+'" style="cursor:pointer;padding:0 4px">✕</b></span>').join('');updSend()}
 $('#attbox').onclick=e=>{const i=e.target.dataset.ax;if(i===undefined)return;S.att.splice(+i,1);drawAtt()};
 async function stage(fs){
@@ -490,6 +489,7 @@ async function stage(fs){
 }
 $('#attf').onchange=e=>{const fs=[...e.target.files];e.target.value='';stage(fs)};
 $('#send').onclick=async()=>{
+  if(S.busy){if(S.ctl)try{S.ctl.abort('user')}catch(e){}return}
   const t=$('#q').value.trim();
   if(!t&&!S.att.length){if(!S.busy)$('#cam').click();return}
   if(S.busy||S.sending)return;
@@ -509,7 +509,6 @@ $('#send').onclick=async()=>{
 updSend();
 document.addEventListener('click',e=>{const b=e.target.closest('.xw>.xb');if(!b)return;e.preventDefault();const f=b.parentElement.querySelector('input,textarea');f.value='';f.dispatchEvent(new Event('input',{bubbles:true}));if(f.id==='q'){autoH();updSend()}xRef(b.parentElement.parentElement||document);f.focus()});
 document.addEventListener('input',e=>{const w=e.target.closest&&e.target.closest('.xw');if(w)w.classList.toggle('hx',!!e.target.value)});
-$('#qcancel').onclick=()=>{if(S.ctl)try{S.ctl.abort('user')}catch(e){}};
 
 /* ===== 聊天圖片：本機紀錄只存精簡版（原圖在 IndexedDB，以 oid 對應），開啟聊天時自動還原 ===== */
 const PHT='（圖片僅存在原裝置）';
@@ -585,7 +584,7 @@ function markSel(){
   const n=selIdx().length,sn=S.snip||'';
   $('#selbar').classList.toggle('hide',!n&&!sn);
   $('#selcnt').textContent=sn?'已框選 '+sn.length+' 字':'已選取 '+n+' 則訊息';
-  $('#selall').classList.toggle('hide',!!sn);$('#selps').classList.toggle('hide',!sn);
+  $('#selall').classList.toggle('hide',!!sn);$('#selclr').classList.toggle('hide',!!sn||!n);$('#snipclr').classList.toggle('hide',!sn);$('#selps').classList.toggle('hide',!sn);
 }
 function toggleSel(i,on){
   if(!S.hist[i]||!txt(S.hist[i]))return;
@@ -593,6 +592,7 @@ function toggleSel(i,on){
   if(on===true||(on===undefined&&!S.sel.has(i)))S.sel.add(i);else S.sel.delete(i);
   markSel();
 }
+$('#selclr').onclick=()=>{S.sel.clear();markSel()};
 $('#selall').onclick=()=>{S.hist.forEach((h,i)=>{if(txt(h))S.sel.add(i)});markSel()};
 let LP=null,LP2=null,LPF=false,LPX=0,LPY=0;
 const chat=$('#chat');
@@ -600,6 +600,7 @@ const vib=n=>{if(navigator.vibrate)try{navigator.vibrate(n)}catch(x){}};
 chat.addEventListener('pointerdown',e=>{
   const m=e.target.closest('.msg');if(!m||e.target.closest('button,.tag')||m.classList.contains('tx'))return;
     LPX=e.clientX;LPY=e.clientY;clearTimeout(LP);clearTimeout(LP2);
+  if(e.target.closest('img.pv')){LP=setTimeout(()=>{LPF=true;toggleSel(+m.dataset.idx,true);vib(30)},700);return}
   LP=setTimeout(()=>{LPF=true;txtMode(m,LPX,LPY)},1000);
 });
 ['pointerup','pointercancel'].forEach(t=>chat.addEventListener(t,()=>{clearTimeout(LP);clearTimeout(LP2);if(LPF)setTimeout(()=>{LPF=false},120)}));
@@ -628,6 +629,7 @@ document.addEventListener('selectionchange',()=>{
   S.snip=g.toString().trim();markSel();
 });
 function clearSnip(){S.snip='';document.querySelectorAll('#chat .msg.tx').forEach(x=>x.classList.remove('tx'));try{getSelection().removeAllRanges()}catch(e){}markSel()}
+$('#snipclr').onclick=clearSnip;
 /* 點空白處：取消所有選取／框選（聊天、筆記本、AI 摘要） */
 document.addEventListener('click',e=>{
   const t=e.target;if(!t||!t.closest)return;
@@ -643,13 +645,13 @@ $('#selps').onclick=async()=>{let t='';try{t=await navigator.clipboard.readText(
 chat.addEventListener('contextmenu',e=>{if(e.target.closest('.msg:not(.tx)'))e.preventDefault()});
 chat.addEventListener('click',e=>{
   if(LPF){LPF=false;return}
-  const z=e.target.closest('img[data-z]');if(z&&!S.sel.size){zoomChat(+z.dataset.z);return}
+  const z=e.target.closest('img[data-z]');if(z&&!S.sel.size&&!S.snip){zoomChat(+z.dataset.z);return}
   const tg=e.target.closest('.tag[data-cp]');
   if(tg){copyText('#'+tg.dataset.cp).then(ok=>{const o=tg.textContent;tg.textContent=ok?'已複製':'複製失敗';setTimeout(()=>{tg.textContent=o},1000)});return}
   const b=e.target.closest('button[data-m]');
   if(b){msgAct(b.dataset.m,+b.dataset.i,b);return}
   const m=e.target.closest('.msg');
-  if(m&&!m.classList.contains('tx')&&!e.target.closest('.act,img,a')){if(S.snip)clearSnip();toggleSel(+m.dataset.idx)}
+  if(m&&!m.classList.contains('tx')&&!e.target.closest('.act,a')){if(S.snip)clearSnip();toggleSel(+m.dataset.idx)}
 });
 
 /* ===== 訊息動作：複製／引用／存成筆記／AI製作筆記／重整 ===== */
@@ -841,7 +843,7 @@ function nbar(k){
   if(!n){b.classList.add('hide');b.innerHTML='';sp.style.height='0';return}
   const B=(a,t,x)=>'<button class="b g sm" data-a="'+a+'"'+(x||'')+'>'+t+'</button>';
   b.innerHTML='<div class="dk"><div class="row" style="margin:0"><span class="mut" style="width:100%">已選取 '+(cf?cf+' 個資料夾':'')+(cf&&cn?'、':'')+(cn?cn+' 則筆記':'')+'</span>'
-    +(n<tot?B('sa','全選'):'')
+    +(n<tot?B('sa','全選'):'')+B('sc','取消選取')
     +(n===1?B('rn',cn?'編輯標題':'改名'):'')+(n===1&&cn===1?B('eb','編輯內容'):'')
     +(cn&&!cf?B('ai',k==='n'?(cn===1?'AI摘要':'AI整併摘要'):'AI 整併'):'')
     +B('dl','刪除',' style="color:var(--warn);border-color:var(--warn)"')+'</div></div>';
