@@ -121,6 +121,10 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 nav{display:none}
 #top{position:sticky;top:0;z-index:25;background:var(--bg);padding:6px 0;margin:0 0 6px;flex-wrap:nowrap;gap:6px}
 #top b{font-size:20px;padding:4px 12px 6px;flex:none;margin-left:auto}
+#top b#lgo{cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .1s,opacity .2s}
+#top b#lgo:active{transform:scale(.94)}
+#top b#lgo.syn{animation:lgp 1s ease-in-out infinite;pointer-events:none}
+@keyframes lgp{0%,100%{opacity:1}50%{opacity:.45}}
 #tbc,#nbk,#ebk{flex:none;min-width:0;width:66px;height:46px;box-sizing:border-box;padding:0 2px 3px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:1px solid #b98b55;border-radius:12px 12px 5px 5px;color:#3b2106;font-size:16px;font-weight:700;letter-spacing:1px;line-height:1;background:repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),repeating-linear-gradient(181deg,rgba(110,65,25,.05) 0 1px,transparent 1px 13px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.2)}#tbc.on,#nbk.on,#ebk.on{border-color:#D98200;background:linear-gradient(180deg,#FFC21A,#F5A623),repeating-linear-gradient(180deg,rgba(130,80,35,.07) 0 1px,transparent 1px 5px),linear-gradient(180deg,#f3e1bf,#e6c999);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.25)}#tbc:active,#nbk:active,#ebk:active{opacity:.75}
 #top #tbc,#top #nbk,#top #ebk{width:58px;font-size:15px;letter-spacing:0}
 #hmb{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:22px;line-height:1;padding:0;cursor:pointer}
@@ -144,8 +148,9 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><b>Chatnote</b></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b></header>
 <section id="p-learn">
+ <div class="mut gdst" style="margin:0 0 6px"></div>
  <div id="chat"></div>
  <div class="mut" id="status" style="margin:0 0 8px"></div>
 </section>
@@ -166,7 +171,7 @@ body.kbo #dock{padding-bottom:8px}
   </details>
   <details class="card"><summary>Google Drive 同步</summary>
    <div style="margin-top:10px">
-    <p class="mut" style="margin-top:0">筆記、圖片和聊天紀錄放在你 Drive 裡的「oc-notes-shared」資料夾。要讓另一個帳號也能同步，先到「帳號管理」按「新增帳號」並登入它，主資料夾會自動共用給它（可編輯），再用那個帳號登入同步即可。同步會逐則比對最後修改時間，新的留下、不會整份覆蓋；刪除也會一起同步。上傳後會順便清掉沒在用的雲端圖片。授權約 1 小時有效，過期請再按一次。你也可以直接在「筆記本」「AI 摘要」頁按同步。</p>
+    <p class="mut" style="margin-top:0">筆記、圖片和聊天紀錄放在你 Drive 裡的「oc-notes-shared」資料夾。要讓另一個帳號也能同步，先到「帳號管理」按「新增帳號」並登入它，主資料夾會自動共用給它（可編輯），再用那個帳號登入同步即可。同步會逐則比對最後修改時間，新的留下、不會整份覆蓋；刪除也會一起同步。上傳後會順便清掉沒在用的雲端圖片。授權約 1 小時有效，過期請再按一次。你也可以直接點右上角的 Chatnote 標誌來同步（聊天、筆記本、AI 摘要頁都能用）。</p>
     <div class="row"><button class="b" id="gdsync">☁ 同步到 Drive</button><button class="b g" id="gdspb">查看空間</button></div>
     <div class="mut" id="gdsp" style="margin-top:8px"></div>
     <label style="display:flex;gap:10px;align-items:center;margin:12px 0 6px"><input type="checkbox" id="gdauto" style="width:22px;flex:none" checked><span>改完筆記自動上傳到 Drive（授權有效時）</span></label>
@@ -853,9 +858,8 @@ $('#mdl').onchange=e=>{
 /* ===== 筆記本／AI 摘要（共用） ===== */
 const TT={n:'筆記本',e:'AI 摘要'};
 ['n','e'].forEach(k=>{
-  $('#p-'+k).innerHTML='<div class="row" style="margin-bottom:10px"><input id="s'+k+'" placeholder="搜尋標題、標籤、內容（可打 #關鍵字）" style="flex:1;min-width:0"><button class="b g sm" id="gsy'+k+'">☁ 同步到 Drive</button></div><div class="mut gdst" style="margin:0 0 6px"></div><p class="mut" style="margin:0 0 8px">長按項目 1 秒可選取（選取後點一下可加選或取消），下方會跳出可用的操作。</p><div id="h'+k+'"></div><div id="ed'+k+'"></div><div id="ap'+k+'"></div><div id="d'+k+'"></div><div id="nsp'+k+'"></div><div id="nb'+k+'" class="nbar hide"></div>';
+  $('#p-'+k).innerHTML='<div class="row" style="margin-bottom:10px"><input id="s'+k+'" placeholder="搜尋標題、標籤、內容（可打 #關鍵字）" style="flex:1;min-width:0"></div><div class="mut gdst" style="margin:0 0 6px"></div><p class="mut" style="margin:0 0 8px">長按項目 1 秒可選取（選取後點一下可加選或取消），下方會跳出可用的操作。</p><div id="h'+k+'"></div><div id="ed'+k+'"></div><div id="ap'+k+'"></div><div id="d'+k+'"></div><div id="nsp'+k+'"></div><div id="nb'+k+'" class="nbar hide"></div>';
   $('#s'+k).oninput=()=>draw(k);
-  $('#gsy'+k).onclick=()=>gdSync();
 });
 function draw(k){
   const q=$('#s'+k).value.trim().replace(/^#/,'').toLowerCase();
@@ -1686,7 +1690,7 @@ async function gdRemote(m,mf){
 let SYNCING=false;
 async function gdSync(silent){
   silent=silent===true;
-  if(SYNCING||GDBUSY)return;SYNCING=true;GDBUSY=true;const t0=+ls.get('oc_mod','0');
+  if(SYNCING||GDBUSY)return;SYNCING=true;GDBUSY=true;const t0=+ls.get('oc_mod','0');const lg=$('#lgo');if(lg)lg.classList.add('syn');
   try{
     if(!silent)gdmsg('同步中…');
     ls.set('oc_gd_amail',await mailA());gdFill();
@@ -1725,7 +1729,7 @@ async function gdSync(silent){
     gdmsg((silent?'已自動同步 '+tm:'同步完成 '+tm)+(changed?'（已更新雲端）':'（雲端已是最新）')+(o.up?'；上傳 '+o.up+' 個圖片檔案':'')+(o.fb?'（'+o.fb+' 個儲存帳號失敗，改存共用資料夾）':'')+(o.wait?'；'+o.wait+' 個檔案等待儲存帳號授權':'')+(o.skip?'；'+o.skip+' 個超過 200MB 未上傳':'')+(sw&&(sw.a||sw.b)?'；清理沒在用的雲端圖片 '+(sw.a+sw.b)+' 個':'')+(f.n?'；下載 '+f.n+' 個檔案':'')+(f.sk?'；略過 '+f.sk+' 個大檔（點開時才下載）':'')+(f.miss?'；'+f.miss+' 個檔案在 Drive 找不到'+(f.le?'（'+f.le+'）':''):''));
     if(!silent)gdSpace();
   }catch(e){PG.end('Drive 同步失敗',1);gdmsg('失敗：'+gerr(e),1)}
-  finally{SYNCING=false;GDBUSY=false;if(+ls.get('oc_mod','0')>t0&&window.schedDrive)window.schedDrive()}
+  finally{SYNCING=false;GDBUSY=false;{const lg=$('#lgo');if(lg)lg.classList.remove('syn')}if(+ls.get('oc_mod','0')>t0&&window.schedDrive)window.schedDrive()}
 }
 const gdVer=async id=>{const j=await(await gdf(GAPI+'files/'+id+'?fields=version,modifiedTime')).json();return j.version+'|'+j.modifiedTime};
 /* 每次同步都依名單「對帳」主資料夾的共用：名單裡有的補上可編輯；名單裡已移除的收回（只有主帳做） */
@@ -1822,6 +1826,7 @@ const mnuClose=()=>{$('#mnu').classList.remove('open');$('#mbk').classList.add('
 $('#nbk').onclick=()=>document.querySelector('nav button[data-t="n"]').click();
 $('#ebk').onclick=()=>document.querySelector('nav button[data-t="e"]').click();
 $('#tbc').onclick=()=>{document.querySelector('nav button[data-t="learn"]').click();if(!S.hist.length&&!S.busy){const a=chats();if(a.length){loadChat(a[0].id);window.scrollTo(0,document.body.scrollHeight)}}};
+$('#lgo').onclick=()=>gdSync();$('#lgo').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();gdSync()}};
 $('#hmb').onclick=()=>{document.querySelectorAll('#mnu button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===CURT));$('#mbk').classList.remove('hide');requestAnimationFrame(()=>$('#mnu').classList.add('open'))};
 $('#mbk').onclick=mnuClose;
 $('#mnu').onclick=e=>{const b=e.target.closest('button[data-t],button[data-go]');if(!b)return;mnuClose();
