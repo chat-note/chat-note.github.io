@@ -919,7 +919,7 @@ async function zoomImg(nid){
     const fid=pickFolder(k,g('f'));if(!fid)return;
     const rec={title,body:g('b'),kws:clean(g('k').split(/[\s,，、#]+/)),fid,files:ED.files};
     let arr=notes();
-    if(ED.id)arr=arr.map(x=>x.id===ED.id?{...x,...rec}:x);else arr.unshift({id:uid(),k,img:null,date:new Date().toLocaleString('zh-TW'),...rec});
+    if(ED.id)arr=arr.map(x=>x.id===ED.id?{...x,...rec,...(JSON.stringify([x.title,x.body,x.kws,x.fid,x.files||[]])!==JSON.stringify([rec.title,rec.body,rec.kws,rec.fid,rec.files||[]])?{et:Date.now()}:{})}:x);else arr.unshift({id:uid(),k,img:null,date:new Date().toLocaleString('zh-TW'),...rec});
     const isNew=!ED.id;sv('oc_notes',arr);rememberF(k,fid);if(isNew){V[k]=fid;s.value=''}ED=null;$('#ed'+k).innerHTML='';gcAll();draw(k);
   }
   else if(a==='aok'&&AP){
@@ -1027,8 +1027,7 @@ async function aiTK(tEl,kEl,bEl,btn){
 }
 const ntime=n=>{
   const c=parseInt(String(n.id).slice(0,8),36),ok=c>1.5e12&&c<4e12,cs=ok?new Date(c).toLocaleString('zh-TW'):(n.date||'');
-  const ed=n.mt&&ok&&n.mt-c>60000;
-  return '🕘 建立 '+esc(cs)+(ed?'　✎ 修改 '+esc(new Date(n.mt).toLocaleString('zh-TW')):'');
+  return '<div>🕘 建立 '+esc(cs)+'</div><div>'+(n.et?'✎ 修改 '+esc(new Date(n.et).toLocaleString('zh-TW')):'✔ 未修改')+'</div>';
 };
 const atts=n=>[...(n.file?[{iid:n.iid,name:n.file.name,type:n.file.type,size:n.file.size}]:[]),...(n.files||[])];
 const FB=n=>{const a=atts(n);return a.length?'<div class="act">'+a.map((f,j)=>'<button data-a="fo" data-i="'+n.id+'" data-j="'+j+'">📎 '+esc(f.name)+'（'+Math.max(1,Math.round((f.size||0)/1024))+' KB）</button>').join('')+'</div>':''};
