@@ -805,7 +805,7 @@ function draw(k){
   const qs=q.split(/[\s,，、#]+/).filter(Boolean);
   const hit=n=>{const h=(tex(n.title)+' '+tex(n.body)+' '+(n.kws||[]).join(' ')+' '+fn(n.fid)).toLowerCase();return qs.every(w=>h.includes(w))};
   const fc=f=>'<div class="it selitem" data-f="'+f.id+'"><div data-a="of" data-i="'+f.id+'" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b class="tt">📁 '+esc(f.name)+'</b><br><span class="mut">'+N.filter(n=>n.fid===f.id).length+' 則</span></span><span>›</span></div></div>';
-  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px"><div style="flex:1;min-width:0"><div class="nd">✎ 修改 '+esc(n.mt?new Date(n.mt).toLocaleString('zh-TW'):(n.date||''))+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(n.body))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
+  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px"><div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(n.body))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
   const bar='';
   let h,d;
   if(fid){
@@ -1024,6 +1024,11 @@ async function aiTK(tEl,kEl,bEl,btn){
   [tEl,kEl].forEach((x,i)=>{x.disabled=false;x.placeholder=op[i];if(!ok)x.value=ov[i]});
   btn.disabled=false;xRef(tEl.closest('#mbox,#edbox'+(ED?ED.k:''))||document);
 }
+const ntime=n=>{
+  const c=parseInt(String(n.id).slice(0,8),36),ok=c>1.5e12&&c<4e12,cs=ok?new Date(c).toLocaleString('zh-TW'):(n.date||'');
+  const ed=n.mt&&ok&&n.mt-c>60000;
+  return '🕘 建立 '+esc(cs)+(ed?'　✎ 修改 '+esc(new Date(n.mt).toLocaleString('zh-TW')):'');
+};
 const atts=n=>[...(n.file?[{iid:n.iid,name:n.file.name,type:n.file.type,size:n.file.size}]:[]),...(n.files||[])];
 const FB=n=>{const a=atts(n);return a.length?'<div class="act">'+a.map((f,j)=>'<button data-a="fo" data-i="'+n.id+'" data-j="'+j+'">📎 '+esc(f.name)+'（'+Math.max(1,Math.round((f.size||0)/1024))+' KB）</button>').join('')+'</div>':''};
 async function openFile2(id,j){
