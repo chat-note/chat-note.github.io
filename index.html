@@ -158,7 +158,7 @@ body.kbo #dock{padding-bottom:8px}
 <section id="p-n" class="hide"></section>
 <section id="p-e" class="hide"></section>
 <section id="p-set" class="hide">
- <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-l</div>
+ <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.24-a</div>
  <div id="s-home">
   <div class="card"><button class="b" id="glogin" style="width:100%">Google 登入</button><div class="mut" id="gdcur" style="margin-top:8px;word-break:break-all"></div></div>
   <details class="card"><summary>帳號管理</summary>
@@ -172,10 +172,10 @@ body.kbo #dock{padding-bottom:8px}
   </details>
   <details class="card"><summary>GitHub Gist 同步（文字）</summary>
    <div style="margin-top:10px">
-    <p class="mut" style="margin-top:0">聊天、筆記本、AI 摘要的文字（含 API 金鑰）會先在本機用「同步密碼」加密，再存到你 GitHub 的一個私密 Gist。權杖不會過期，所以不用像 Drive 那樣每小時重新授權；Drive 只負責圖片與附件。</p>
-    <p class="mut">取得權杖：github.com → Settings → Developer settings → Personal access tokens → <b>Tokens (classic)</b> → Generate new token (classic)，只勾 <b>gist</b>，Expiration 選 <b>No expiration</b>。（fine-grained 權杖不支援 Gist，不能用。）第二台裝置填同一組權杖和同步密碼，會自動找到同一個 Gist。</p>
+    <p class="mut" style="margin-top:0">聊天、筆記本、AI 摘要的文字（含 API 金鑰）會先在本機用權杖當金鑰加密，再存到你 GitHub 的一個私密 Gist。權杖不會過期，所以不用像 Drive 那樣每小時重新授權；Drive 只負責圖片與附件。</p>
+    <p class="mut">取得權杖：github.com → Settings → Developer settings → Personal access tokens → <b>Tokens (classic)</b> → Generate new token (classic)，只勾 <b>gist</b>，Expiration 選 <b>No expiration</b>。（fine-grained 權杖不支援 Gist，不能用。）第二台裝置登入 Google 後按右上角 Chatnote 標誌，會自動從 Drive 取得權杖，並找到同一個 Gist。權杖會以明文放在你的 Drive，請確保 Drive 帳號安全。</p>
     <input id="ghtok" type="password" autocomplete="off" placeholder="GitHub 權杖（ghp_…）">
-    <input id="ghpw" type="password" autocomplete="off" placeholder="同步密碼（各裝置要一樣，忘記就無法解密）" style="margin-top:8px">
+    <input id="ghpw" type="password" autocomplete="off" placeholder="舊同步密碼（選填，只有要讀取以前加密的資料才需要）" style="margin-top:8px">
     <div class="row" style="margin-top:8px"><button class="b" id="ghsave">儲存並同步</button><button class="b g" id="ghclr">清除本機設定</button></div>
     <div class="mut" id="ghst" style="margin-top:8px"></div>
    </div>
@@ -1708,13 +1708,14 @@ async function gdSync(silent){
     const R=await gdRemote(m,mf);
     if(R&&R.acc)mergeAccts(R.acc);
     if(ME()&&MAIN()&&ME()!==MAIN()&&(ADEL()[ME()]||0)>(AMT()[ME()]||0))throw new Error('這個帳號已被從帳號名單移除，無法再同步');
+    const GHX=ghMerge(R&&R.gh);
     /* 讀完雲端後立刻合併並寫回本機（中間不等網路，不會蓋掉你剛改的內容） */
     const txt=!(GHON()&&ls.get('oc_gh_mig','')==='1');
     const locM={...((R&&R.loc)||{}),...LOC()};
     localStorage.setItem('oc_gd_loc',JSON.stringify(locM));
     let out,sig;
-    if(txt){const T=mergeText(R);out={v:2,...T,loc:locM,acc:accOut()};sig=x=>JSON.stringify([x.notes,x.folds,x.dels,x.chats,x.apis,x.loc,x.acc]);changed=!R||R.v!==2||sig(out)!==sig(R)}
-    else{out={v:3,loc:locM,acc:accOut()};sig=x=>JSON.stringify([x.loc,x.acc]);changed=!R||R.v!==3||sig(out)!==sig(R)}
+    if(txt){const T=mergeText(R);out={v:2,...T,loc:locM,acc:accOut(),gh:GHX};sig=x=>JSON.stringify([x.notes,x.folds,x.dels,x.chats,x.apis,x.loc,x.acc,x.gh]);changed=!R||R.v!==2||sig(out)!==sig(R)}
+    else{out={v:3,loc:locM,acc:accOut(),gh:GHX};sig=x=>JSON.stringify([x.loc,x.acc,x.gh]);changed=!R||R.v!==3||sig(out)!==sig(R)}
     if(changed&&nid&&tr<2&&await gdVer(nid)!==ver0)continue;
     if(changed){out.ts=Date.now();await gdPutF(fid,'notes.json',JSON.stringify(out),nid)}
     if(txt&&GHON())MIGDONE=true;
@@ -1747,7 +1748,26 @@ $('#gdsync').onclick=()=>syncAll();
 /* ===== GitHub Gist：文字（聊天／筆記／AI 摘要／API 金鑰，加密後存放）；Drive 只放圖片與附件 ===== */
 const GHDESC='chatnote-sync',GHFILE='chatnote.json';
 const GHK=()=>ls.get('oc_gh_tok','').trim(),GHPW=()=>ls.get('oc_gh_pw',''),GHID=()=>ls.get('oc_gh_id','');
-const GHON=()=>!!(GHK()&&GHPW());
+const GHON=()=>!!GHK();
+const GHMT=()=>+ls.get('oc_gh_mt','0');
+/* 權杖隨 Drive 的 notes.json 同步：逐一比修改時間，新的算數 */
+function ghMerge(r){
+  const loc=GHON()?{t:GHK(),mt:GHMT()||1,m:ls.get('oc_gh_mig','')==='1'}:null;
+  if(r&&r.t&&(!loc||(r.mt||0)>loc.mt)){
+    if(r.t!==GHK())ls.set('oc_gh_id','');
+    ls.set('oc_gh_tok',r.t);ls.set('oc_gh_mt',String(r.mt||1));
+    if(r.m)ls.set('oc_gh_mig','1');
+    try{$('#ghtok').value=r.t}catch(e){}
+    return r;
+  }
+  return loc;
+}
+/* Gist 解密：先用權杖當金鑰；失敗再用舊同步密碼（讀取舊資料用） */
+async function ghDec(t){
+  try{return await dec(t,GHK())}catch(e){}
+  const o=GHPW();if(o){try{return await dec(t,o)}catch(e){}}
+  throw new Error('無法解密 Gist：這份資料是用舊同步密碼加密的，請在設定的「舊同步密碼」欄填入一次');
+}
 let GHBUSY=false,GHPRE='',MIGDONE=false,SYNCALL=false;
 const GHE=st=>{const e=new Error(st===401?'GitHub 權杖無效或已被撤銷':st===403?'GitHub 拒絕存取（權杖需勾選 gist 權限，或已達使用上限）':st===404?'找不到 Gist（權杖需勾選 gist 權限，或 Gist 已被刪除）':'GitHub 錯誤 '+st);e.st=st;return e};
 const ghf=async(p,o)=>{let r;try{r=await fetch('https://api.github.com'+p,Object.assign({},o,{headers:Object.assign({Authorization:'Bearer '+GHK(),Accept:'application/vnd.github+json'},(o||{}).headers)}))}catch(e){throw new Error('連不上 GitHub，請檢查網路')}if(!r.ok)throw GHE(r.status);return r};
@@ -1778,13 +1798,13 @@ async function ghSync(silent){
   if(GHBUSY)return{msg:'',err:false,skip:true};
   GHBUSY=true;
   try{
-    const pw=GHPW();let id=GHID();
+    let id=GHID();
     if(!id){id=await ghFind();if(id)ls.set('oc_gh_id',id)}
     let changed=false,made=false;
     for(let tr=0;tr<3;tr++){
       let R=null,ver0='';
       if(id){
-        try{const g=await ghRead(id);ver0=g.ver;if(g.txt){try{R=await dec(g.txt,pw)}catch(e){throw new Error('同步密碼錯誤，或 Gist 資料已損毀')}}}
+        try{const g=await ghRead(id);ver0=g.ver;if(g.txt){R=await ghDec(g.txt)}}
         catch(e){if(e.st===404){id='';ls.set('oc_gh_id','')}else throw e}
       }
       const out={v:3,...mergeText(R)};
@@ -1793,7 +1813,7 @@ async function ghSync(silent){
       if(changed){
         if(id&&tr<2&&await ghVer(id)!==ver0)continue;
         out.ts=Date.now();
-        const files={[GHFILE]:{content:await enc(out,pw)}};
+        const files={[GHFILE]:{content:await enc(out,GHK())}};
         if(id)await ghf('/gists/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({files})});
         else{const g=await(await ghf('/gists',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({description:GHDESC,public:false,files})})).json();id=g.id;ls.set('oc_gh_id',id);made=true}
       }
@@ -1811,20 +1831,24 @@ async function syncAll(silent){
   silent=silent===true;
   if(SYNCALL||SYNCING||GDBUSY)return;
   SYNCALL=true;const t0=+ls.get('oc_mod','0');const lg=$('#lgo');if(lg)lg.classList.add('syn');
-  const ghOn=GHON(),driveOn=!!ME()||!ghOn;
+  let ghOn=GHON();const driveOn=!!ME()||!ghOn;
   const tokOk=()=>GD.tok&&Date.now()<GD.exp&&GD.cid===ls.get('oc_gd_cid','')&&GD.sc===SCA();
   let ap=Promise.resolve(false),aerr='';
   /* 授權視窗要在點擊當下開，所以在任何等待之前先啟動 */
   if(driveOn){if(tokOk())ap=Promise.resolve(true);else if(!silent)ap=gdAuth().then(()=>true,e=>{aerr=e.message;return false})}
-  let gr={msg:'',err:false};
+  let gr={msg:'',err:false},dDone=false,dOk=null;
   try{
     if(!silent)gdmsg('同步中…');
+    /* 這台裝置還沒有權杖：先同步 Drive 把權杖拿下來 */
+    if(!ghOn&&driveOn){dOk=await ap;if(dOk){await gdSync(silent);dDone=true;ghOn=GHON()}}
     if(ghOn){gr=await ghSync(silent);GHPRE=gr.skip?'':gr.msg}
-    if(driveOn){
-      if(await ap)await gdSync(silent);
+    if(driveOn&&!dDone){
+      if(dOk===null)dOk=await ap;
+      if(dOk)await gdSync(silent);
       else if(!ghOn)gdmsg(silent?'Drive 授權已過期，自動同步暫停。請點右上角標誌重新授權':'Drive 授權失敗：'+aerr,1);
       else gdmsg((GHPRE?GHPRE+'；':'')+(silent?'Drive 授權已過期，圖片暫停同步（點右上角標誌重新授權）':'Drive 授權失敗：'+aerr),gr.err||!silent);
-    }else gdmsg(GHPRE,gr.err);
+    }else if(!driveOn)gdmsg(GHPRE,gr.err);
+    else if(ghOn)gdmsg('已從 Drive 取得權杖；'+GHPRE,gr.err);
     if(ghOn&&!gr.err){
       if(MIGDONE){MIGDONE=false;const r2=await ghSync(true);if(!r2.err)ls.set('oc_gh_mig','1')}
       else if(!ME())ls.set('oc_gh_mig','1');
@@ -1845,15 +1869,15 @@ const ghmsg=(t,e)=>{$('#ghst').innerHTML=e?'<span class="err">'+esc(t)+'</span>'
 $('#ghtok').value=ls.get('oc_gh_tok','');$('#ghpw').value=ls.get('oc_gh_pw','');
 $('#ghsave').onclick=async()=>{
   const t=$('#ghtok').value.trim(),p=$('#ghpw').value;
-  if(!t||!p){ghmsg('請填 GitHub 權杖和同步密碼',1);return}
-  if(t!==GHK())ls.set('oc_gh_id','');
+  if(!t){ghmsg('請填 GitHub 權杖',1);return}
+  if(t!==GHK()){ls.set('oc_gh_id','');ls.set('oc_gh_mt',String(Date.now()))}
   ls.set('oc_gh_tok',t);ls.set('oc_gh_pw',p);
   ghmsg('連線中…');
   const r=await ghSync(false);
-  ghmsg(r.msg+(!r.err&&ME()&&ls.get('oc_gh_mig','')!=='1'?'；Drive 上原有的文字，會在下次按右上角標誌同步時併進來':''),r.err);
+  ghmsg(r.msg+(!r.err&&ME()?'；再按一次右上角標誌，權杖就會存進 Drive':''),r.err);
   if(!r.err&&!ME())ls.set('oc_gh_mig','1');
 };
-$('#ghclr').onclick=()=>{if(!confirm('清除這台裝置上的 GitHub 權杖與同步密碼？Gist 上的資料不會被刪除。'))return;['oc_gh_tok','oc_gh_pw','oc_gh_id','oc_gh_mig'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});$('#ghtok').value='';$('#ghpw').value='';ghmsg('已清除')};
+$('#ghclr').onclick=()=>{if(!confirm('清除這台裝置上的 GitHub 權杖與同步密碼？Gist 上的資料不會被刪除。'))return;['oc_gh_tok','oc_gh_pw','oc_gh_id','oc_gh_mig','oc_gh_mt'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});$('#ghtok').value='';$('#ghpw').value='';ghmsg('已清除')};
 
 /* ===== 底部固定列高度（學習列＋按鈕列），讓內容不被擋住 ===== */
 let NAVH=0,KB=false,KBT=0,CURT='learn';
