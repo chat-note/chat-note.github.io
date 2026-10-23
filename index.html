@@ -114,8 +114,12 @@ nav{display:none}
 #top{position:sticky;top:0;z-index:25;background:var(--bg);padding:6px 0;margin:0 0 6px;flex-wrap:nowrap;gap:6px}
 #top b{font-size:20px;padding:4px 12px 6px;flex:none;margin-left:auto}
 #hmb{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:22px;line-height:1;padding:0;cursor:pointer}
-#mnu details{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin:0 0 8px}
-#mnu summary{cursor:pointer;font-weight:600}
+#mnu details{margin:0 0 6px}
+#mnu summary{list-style:none;display:block;padding:14px 12px;border-radius:10px;color:var(--fg);font-size:17px;font-weight:600;cursor:pointer;-webkit-user-select:none;user-select:none}
+#mnu summary::-webkit-details-marker{display:none}
+#mnu summary::before{content:"▼";display:inline-block;font-size:12px;margin-right:8px;color:var(--mut);vertical-align:1px}
+#mnu details[open]>summary{background:var(--selbg);color:var(--selt)}
+#mnu details>*:not(summary){padding:6px 12px 10px}
 #mbk{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:62}
 #mnu{position:fixed;top:0;bottom:0;left:0;width:86%;max-width:340px;background:var(--card);z-index:63;transform:translateX(-100%);visibility:hidden;transition:transform .2s,visibility .2s;padding:16px;overflow:auto;box-shadow:4px 0 16px rgba(0,0,0,.25)}
 #mnu.open{transform:none;visibility:visible}
@@ -136,7 +140,7 @@ body.kbo #dock{padding-bottom:8px}
 <section id="p-n" class="hide"></section>
 <section id="p-e" class="hide"></section>
 <section id="p-set" class="hide">
- <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-h</div>
+ <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-i</div>
  <div id="s-home">
   <div class="card"><button class="b" id="glogin" style="width:100%">Google 登入</button><div class="mut" id="gdcur" style="margin-top:8px;word-break:break-all"></div></div>
   <details class="card"><summary>帳號管理</summary>
@@ -215,7 +219,7 @@ body.kbo #dock{padding-bottom:8px}
    </div>
   </div>
   </details>
-<details><summary>使用說明</summary><p class="mut">每拍一張圖就是新的一題，AI 記得前面的討論。按住訊息 1 秒可框選部分文字（可複製、貼上到輸入框）；輕點訊息即可整則選取（可複選，再點一次取消；也可按「取消選取」，或點空白處取消）；再按下方「存筆記」（原文存入）或「AI筆記」（AI 摘要）；每則訊息底下也有單獨的按鈕（複製、引用、編輯你的訊息後重送、存成筆記、AI筆記、檢索筆記本、重整）。要開新聊天或切換聊天，請點左上角的三條線 ☰，選「新聊天」或「最近聊天」。存入時會讓你選資料夾（會記住上次的選擇）。聊天紀錄會存在這台裝置，並在你改動後自動隨 Google Drive 同步（多個帳號會依時間合併）。聊天裡夾帶的圖片只留在原裝置，換裝置時會顯示「圖片僅存在原裝置」；存成筆記的圖片則會一起同步。可用「附件」夾帶圖片、PDF（Gemini／Claude）或文字檔，也可以只送文字。</p></details></aside>
+</aside>
 <div id="pg" class="hide" role="status" aria-live="polite"><div class="t"><span id="pgl"></span><b id="pgr"></b></div><div class="tr"><div id="pgf" class="fl"></div></div></div>
 <div id="sbar"><div id="sth"></div></div><div id="jmp"><button id="jt" aria-label="到最上面">▲</button><button id="jb" aria-label="到最下面">▼</button></div>
 
