@@ -137,7 +137,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 <section id="p-n" class="hide"></section>
 <section id="p-e" class="hide"></section>
 <section id="p-set" class="hide">
- <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-d</div>
+ <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-e</div>
  <div id="s-home">
   <div class="card"><button class="b" id="glogin" style="width:100%">Google 登入</button><div class="mut" id="gdcur" style="margin-top:8px;word-break:break-all"></div></div>
   <details class="card"><summary>帳號管理</summary>
@@ -828,9 +828,9 @@ function nbar(k){
   if(!n){b.classList.add('hide');b.innerHTML='';sp.style.height='0';return}
   const B=(a,t,x)=>'<button class="b g sm" data-a="'+a+'"'+(x||'')+'>'+t+'</button>';
   b.innerHTML='<div class="dk"><div class="row" style="margin:0"><span class="mut" style="width:100%">已選取 '+(cf?cf+' 個資料夾':'')+(cf&&cn?'、':'')+(cn?cn+' 則筆記':'')+'</span>'
-    +B('sa',n>=tot?'取消全選':'全選')+B('sc','取消選取')
+    +(n<tot?B('sa','全選'):'')+B('sc','取消選取')
     +(n===1?B('rn',cn?'編輯標題':'改名'):'')+(n===1&&cn===1?B('eb','編輯內容'):'')
-    +(cn&&!cf?B('ai',k==='n'?'AI 整理 → AI 摘要':'AI 整併'):'')
+    +(cn&&!cf?B('ai',k==='n'?(cn===1?'AI摘要':'AI整併摘要'):'AI 整併'):'')
     +B('dl','刪除',' style="color:var(--warn);border-color:var(--warn)"')+'</div></div>';
   b.classList.remove('hide');sp.style.height=(b.offsetHeight+10)+'px';
 }
@@ -849,13 +849,18 @@ async function aiMerge(k){
   const ids=[...document.querySelectorAll('#p-'+k+' .sel[data-c]')].map(c=>c.dataset.c);
   const sel=notes().filter(n=>ids.includes(n.id));
   if(sel.length<(k==='e'?2:1)){alert(k==='e'?'請先長按選取至少 2 則AI 摘要':'請先長按選取要整理的筆記');return}
-  $('#ap'+k).innerHTML='<p class="mut">AI 整理中…</p>';
+  $('#ap'+k).innerHTML='<p class="mut">'+(sel.length===1?'AI 摘要中…':'AI 整併摘要中…')+'</p>';
   try{
-    const pr='請把以下'+(k==='e'?'AI 摘要':'筆記')+'整理成一則「AI 摘要」：保留所有重點與易錯點、去除重複、條列式、白話。優惠類請依店家或類別整理，列出期限與條件，已過期的標註（今天是'+new Date().toLocaleDateString('zh-TW')+'）。只輸出 JSON：{"title":"AI 摘要標題","kws":["關鍵字"],"body":"條列式內容（300 字內）"}\n'+JSON.stringify(sel.map(x=>({title:x.title,kws:x.kws,body:x.body})));
+    const today='（今天是'+new Date().toLocaleDateString('zh-TW')+'）';
+    const fmt='只輸出 JSON：{"title":"AI 摘要標題","kws":["關鍵字"],"body":"條列式內容（300 字內）"}\n';
+    const data=JSON.stringify(sel.map(x=>({title:x.title,kws:x.kws,body:x.body})));
+    const pr=sel.length===1
+      ?'請為以下這一則'+(k==='e'?'AI 摘要':'筆記')+'做「AI 摘要」：只根據這一則的內容，抓出核心重點與易錯點，條列式、白話、比原文精簡；不要加入原文沒有的資訊。若是優惠類，列出店家、期限與條件，已過期的標註'+today+'。'+fmt+data
+      :'以下是 '+sel.length+' 則'+(k==='e'?'AI 摘要':'筆記')+'，請「整併」成一則「AI 摘要」：合併相同主題、去除重複與矛盾處（有矛盾時註明）、保留所有重點與易錯點，依主題或類別分組、條列式、白話。優惠類請依店家或類別整理，列出期限與條件，已過期的標註'+today+'。'+fmt+data;
     const o=jparse(await call([{role:'user',parts:[{text:pr}]}],SYS2,true));
     const rec={title:o.title||sel[0].title,body:Array.isArray(o.body)?o.body.join('\n'):(o.body||''),kws:clean([...(o.kws||[]),...sel.flatMap(x=>x.kws||[])])};
     AP={k,ids,rec};
-    $('#ap'+k).innerHTML='<div class="card"><b>整理結果（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(rec.body))+'</div><p>存到AI 摘要資料夾：<select>'+folderOpts('e',last().e)+'</select></p>'+(k==='e'?'<p class="mut">存入後會移除被整併的 '+sel.length+' 則。</p>':'')+'<div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
+    $('#ap'+k).innerHTML='<div class="card"><b>'+(sel.length===1?'摘要結果':'整併摘要結果')+'（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(rec.body))+'</div><p>存到AI 摘要資料夾：<select>'+folderOpts('e',last().e)+'</select></p>'+(k==='e'?'<p class="mut">存入後會移除被整併的 '+sel.length+' 則。</p>':'')+'<div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
   }catch(e){$('#ap'+k).innerHTML='<p>'+errH(e)+'</p>'}
 }
 async function lazyThumbs(k){
