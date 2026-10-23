@@ -115,6 +115,7 @@ nav{display:none}
 #top b{font-size:20px;padding:4px 12px 6px;flex:none;margin-left:auto}
 #hmb{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:22px;line-height:1;padding:0;cursor:pointer}
 #mnu details{margin:0 0 6px}
+#hlist .hcur{outline:2.5px solid var(--sel);outline-offset:-1px;background:var(--selbg);border-radius:10px;padding:6px 8px}
 #mnu summary{list-style:none;display:block;padding:14px 12px;border-radius:10px;color:var(--fg);font-size:17px;font-weight:600;cursor:pointer;-webkit-user-select:none;user-select:none}
 #mnu summary::-webkit-details-marker{display:none}
 #mnu summary::before{content:"▼";display:inline-block;font-size:12px;margin-right:8px;color:var(--mut);vertical-align:1px}
@@ -140,7 +141,7 @@ body.kbo #dock{padding-bottom:8px}
 <section id="p-n" class="hide"></section>
 <section id="p-e" class="hide"></section>
 <section id="p-set" class="hide">
- <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-j</div>
+ <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-k</div>
  <div id="s-home">
   <div class="card"><button class="b" id="glogin" style="width:100%">Google 登入</button><div class="mut" id="gdcur" style="margin-top:8px;word-break:break-all"></div></div>
   <details class="card"><summary>帳號管理</summary>
@@ -583,7 +584,7 @@ function saveChat(){
 function drawHist(){
   const a=chats();
   $('#hcnt').textContent=a.length;
-  $('#hlist').innerHTML=a.length?a.map(c=>'<div class="row" style="justify-content:space-between;flex-wrap:nowrap;margin:8px 0"><span data-h="open" data-i="'+c.id+'" style="flex:1;min-width:0;cursor:pointer"><b>'+(c.id===S.cid?'✓ ':'')+esc(titleOf(c.hist))+'</b><br><span class="mut">'+esc(new Date(c.ts).toLocaleString('zh-TW'))+'・'+c.hist.length+' 則</span></span><button class="b g" style="padding:6px 12px" data-h="del" data-i="'+c.id+'">刪除</button></div>').join('')+'<button class="b g sm" data-h="clr">清空全部紀錄</button>':'<p class="mut" style="margin:0">還沒有聊天紀錄。</p>';
+  $('#hlist').innerHTML=a.length?a.map(c=>'<div class="row'+(c.id===S.cid?' hcur':'')+'" style="justify-content:space-between;flex-wrap:nowrap;margin:8px 0"><span data-h="open" data-i="'+c.id+'" style="flex:1;min-width:0;cursor:pointer"><b>'+esc(titleOf(c.hist))+'</b><br><span class="mut">'+esc(new Date(c.ts).toLocaleString('zh-TW'))+'・'+c.hist.length+' 則</span></span><button class="b g" style="padding:6px 12px" data-h="del" data-i="'+c.id+'">刪除</button></div>').join('')+'<button class="b g sm" data-h="clr">清空全部紀錄</button>':'<p class="mut" style="margin:0">還沒有聊天紀錄。</p>';
 }
 function loadChat(id,quiet){
   const c=chats().find(x=>x.id===id);if(!c)return;
@@ -1728,7 +1729,7 @@ function closeDrwUI(){$('#drw').classList.remove('open');$('#dbk').classList.add
 function closeDrw(){closeDrwUI();ovClose()}
 function openDrw(){
   const a=chats().slice(0,3);
-  $('#drw').innerHTML='<h3>最近的聊天</h3>'+(a.length?a.map(c=>'<div class="it" data-ci="'+c.id+'"><b class="tt">'+(c.id===S.cid?'✓ ':'')+esc(titleOf(c.hist))+'</b><br><span class="mut">'+esc(new Date(c.ts).toLocaleString('zh-TW'))+'・'+c.hist.length+' 則</span></div>').join(''):'<p class="mut">還沒有聊天紀錄。</p>')+'<p class="mut">更早的紀錄在左上角選單的「聊天紀錄」。</p>';
+  $('#drw').innerHTML='<h3>最近的聊天</h3>'+(a.length?a.map(c=>'<div class="it'+(c.id===S.cid?' sel':'')+'" data-ci="'+c.id+'"><b class="tt">'+esc(titleOf(c.hist))+'</b><br><span class="mut">'+esc(new Date(c.ts).toLocaleString('zh-TW'))+'・'+c.hist.length+' 則</span></div>').join(''):'<p class="mut">還沒有聊天紀錄。</p>')+'<p class="mut">更早的紀錄在左上角選單的「聊天紀錄」。</p>';
   ovOpen();$('#dbk').classList.remove('hide');requestAnimationFrame(()=>$('#drw').classList.add('open'));
 }
 $('#swc').onclick=()=>{$('#cmenu').classList.add('hide');document.querySelector('nav button[data-t="learn"]').click();openDrw()};
