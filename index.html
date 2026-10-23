@@ -113,6 +113,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 nav{display:none}
 #top{position:sticky;top:0;z-index:25;background:var(--bg);padding:6px 0;margin:0 0 6px;flex-wrap:nowrap;gap:6px}
 #top b{font-size:20px;padding:4px 12px 6px;flex:none;margin-left:auto}
+#nbk{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}#nbk:active{opacity:.7}
 #hmb{flex:none;width:44px;height:44px;box-sizing:border-box;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--fg);font-size:22px;line-height:1;padding:0;cursor:pointer}
 #mnu details{margin:0 0 6px}
 #hlist .hcur{outline:2.5px solid var(--sel);outline-offset:-1px;background:var(--selbg);border-radius:10px;padding:6px 8px}
@@ -134,7 +135,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><b>Chatnote</b></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="nbk" aria-label="筆記本" title="筆記本"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1z" fill="#F5A623" stroke="#D98200" stroke-width="1.2" stroke-linejoin="round"/></svg></button><b>Chatnote</b></header>
 <section id="p-learn">
  <div id="chat"></div>
  <div class="mut" id="status" style="margin:0 0 8px"></div>
@@ -1768,6 +1769,7 @@ $('#swc').onclick=()=>{$('#cmenu').classList.add('hide');document.querySelector(
 $('#dbk').onclick=closeDrw;
 /* ===== 左上角三條線選單（取代底部分頁列）＋右上角下拉 ===== */
 const mnuClose=()=>{$('#mnu').classList.remove('open');$('#mbk').classList.add('hide')};
+$('#nbk').onclick=()=>document.querySelector('nav button[data-t="n"]').click();
 $('#hmb').onclick=()=>{document.querySelectorAll('#mnu button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===CURT));$('#mbk').classList.remove('hide');requestAnimationFrame(()=>$('#mnu').classList.add('open'))};
 $('#mbk').onclick=mnuClose;
 $('#mnu').onclick=e=>{const b=e.target.closest('button[data-t],button[data-go]');if(!b)return;mnuClose();
