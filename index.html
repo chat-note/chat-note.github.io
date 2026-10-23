@@ -8,8 +8,8 @@
 <title>Chatnote</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 34 34%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%232a8f76%22/%3E%3Cstop offset=%221%22 stop-color=%22%230f4c3f%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2234%22 height=%2234%22 rx=%229%22 fill=%22url(%23g)%22/%3E%3Cpath d=%22M23.5 11.5A8.5 8.5 0 1 0 23.5 22.5%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 fill=%22none%22/%3E%3C/svg%3E">
 <style>
-:root{--bg:#f3f5f2;--fg:#17201c;--card:#fff;--mut:#66716b;--acc:#1f6f5c;--on:#fff;--bd:#d8ded9;--me:#dcebe5;--warn:#a4452c;--acc2:#0f4c3f;color-scheme:light dark}
-@media(prefers-color-scheme:dark){:root{--bg:#121714;--fg:#e8eeea;--card:#1c2420;--mut:#93a09a;--acc:#5fc4a6;--on:#0b1410;--bd:#2c3731;--me:#25382f;--warn:#e58a6c;--acc2:#2c9a7e}}
+:root{--bg:#f3f5f2;--fg:#17201c;--card:#fff;--mut:#66716b;--acc:#1f6f5c;--on:#fff;--bd:#d8ded9;--me:#dcebe5;--warn:#a4452c;--acc2:#0f4c3f;--sel:#5ab0f0;--selt:#2a85c9;--selbg:#e8f4fd;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#121714;--fg:#e8eeea;--card:#1c2420;--mut:#93a09a;--acc:#5fc4a6;--on:#0b1410;--bd:#2c3731;--me:#25382f;--warn:#e58a6c;--acc2:#2c9a7e;--sel:#6cb8f5;--selt:#8ccaf8;--selbg:#1d3042}}
 *{box-sizing:border-box}
 body{margin:0;font:16px/1.65 system-ui,"Noto Sans TC","PingFang TC",sans-serif;background:var(--bg);color:var(--fg);padding-bottom:calc(var(--bh,120px) + 20px)}
 main{max-width:720px;margin:0 auto;padding:14px}
@@ -33,12 +33,12 @@ input,select,textarea{width:100%;font:inherit;padding:11px;border:1px solid var(
 .selitem{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .selitem details>*:not(summary){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .it{padding:10px 8px;margin:0 0 2px;border-radius:8px}
-.it.sel{background:var(--me)}
-.it.sel .tt::before{content:"✓ ";color:var(--acc)}
+.it.sel{background:var(--selbg);outline:2.5px solid var(--sel);outline-offset:-2px}
+.it.sel .tt::before{content:"✓ ";color:var(--selt)}
 .nbar{position:fixed;left:0;right:0;bottom:calc(var(--bt,56px) + var(--kb,0px));z-index:30;background:var(--card);border-top:1px solid var(--bd);box-shadow:0 -4px 14px rgba(0,0,0,.12);padding:8px 14px}
 .nbar .dk{max-width:720px;margin:0 auto}
-.msg.sel{outline:2px solid var(--acc)}
-.msg.sel::before{content:"✓ 已選取";display:block;font-size:13px;color:var(--acc);font-weight:600}
+.msg.sel{outline:3px solid var(--sel);background:var(--selbg)}
+.msg.sel::before{content:"✓ 已選取";display:block;font-size:13px;color:var(--selt);font-weight:600}
 .err{color:var(--warn);font-weight:600}
 .mut{color:var(--mut);font-size:14px}
 img.pv{max-width:100%;max-height:300px;border-radius:8px;display:block;margin-bottom:10px}
@@ -103,7 +103,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .xw>input,.xw>textarea{padding-right:40px}
 
 #p-n .it.selitem,#p-e .it.selitem{border:1.5px solid var(--bd);background:var(--card);margin:0 0 10px;padding:10px 12px;border-radius:10px}
-#p-n .it.selitem.sel,#p-e .it.selitem.sel{border-color:var(--acc)}
+#p-n .it.selitem.sel,#p-e .it.selitem.sel{border-color:var(--sel);box-shadow:0 0 0 2px var(--sel);outline:none;background:var(--selbg)}
 .nd{font-size:12px;color:var(--mut);margin:0 0 4px}
 .nt{display:block;font-weight:700;padding:5px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .it:has(details[open]) .nt{white-space:normal;overflow:visible}
@@ -127,7 +127,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     </div>
     <div class="row"><span class="mut">用途</span><select id="mode" style="flex:1;min-width:0"><option value="q">題目討論（任何科目）</option><option value="o">優惠整理（QR、海報、截圖）</option></select></div>
    </div>
-  <p class="mut">每拍一張圖就是新的一題，AI 記得前面的討論。按住訊息 1 秒可框選部分文字（可複製、貼上到輸入框）；輕點訊息即可整則選取（可複選，再點一次取消）；再按下方「存筆記」（原文存入）或「AI筆記」（AI 摘要）；每則訊息底下也有單獨的按鈕（複製、引用、編輯你的訊息後重送、存成筆記、AI製作筆記、檢索筆記本、重整）。要開新聊天或切換聊天，請長按最底下的「聊天」1 秒。存入時會讓你選資料夾（會記住上次的選擇）。聊天紀錄會存在這台裝置，並在你改動後自動隨 Google Drive 同步（多個帳號會依時間合併）。聊天裡夾帶的圖片只留在原裝置，換裝置時會顯示「圖片僅存在原裝置」；存成筆記的圖片則會一起同步。可用「附件」夾帶圖片、PDF（Gemini／Claude）或文字檔，也可以只送文字。</p>
+  <p class="mut">每拍一張圖就是新的一題，AI 記得前面的討論。按住訊息 1 秒可框選部分文字（可複製、貼上到輸入框）；輕點訊息即可整則選取（可複選，再點一次取消；點空白處可取消全部選取或框選）；再按下方「存筆記」（原文存入）或「AI筆記」（AI 摘要）；每則訊息底下也有單獨的按鈕（複製、引用、編輯你的訊息後重送、存成筆記、AI筆記、檢索筆記本、重整）。要開新聊天或切換聊天，請長按最底下的「聊天」1 秒。存入時會讓你選資料夾（會記住上次的選擇）。聊天紀錄會存在這台裝置，並在你改動後自動隨 Google Drive 同步（多個帳號會依時間合併）。聊天裡夾帶的圖片只留在原裝置，換裝置時會顯示「圖片僅存在原裝置」；存成筆記的圖片則會一起同步。可用「附件」夾帶圖片、PDF（Gemini／Claude）或文字檔，也可以只送文字。</p>
   </details>
   <details id="hist"><summary>聊天紀錄（<span id="hcnt">0</span>）</summary><div id="hlist" style="margin-top:8px"></div></details>
  </div>
@@ -137,7 +137,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 <section id="p-n" class="hide"></section>
 <section id="p-e" class="hide"></section>
 <section id="p-set" class="hide">
- <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-e</div>
+ <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.23-f</div>
  <div id="s-home">
   <div class="card"><button class="b" id="glogin" style="width:100%">Google 登入</button><div class="mut" id="gdcur" style="margin-top:8px;word-break:break-all"></div></div>
   <details class="card"><summary>帳號管理</summary>
@@ -156,6 +156,14 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
     <div class="mut" id="gdsp" style="margin-top:8px"></div>
     <label style="display:flex;gap:10px;align-items:center;margin:12px 0 6px"><input type="checkbox" id="gdauto" style="width:22px;flex:none" checked><span>改完筆記自動上傳到 Drive（授權有效時）</span></label>
     <div class="mut gdst" id="gdstat" style="margin-top:8px"></div>
+   </div>
+  </details>
+  <details class="card"><summary>本機儲存空間</summary>
+   <div style="margin-top:10px">
+    <p class="mut" style="margin-top:0">圖片與附件存在這台裝置的瀏覽器裡。超過門檻的檔案，同步時不會自動下載，點開時才從 Drive 下載。「釋放本機大檔」只會清掉已確認備份在雲端的檔案，雲端那份不會被刪。填 0 代表同步時不略過任何檔案，此時「釋放」會釋放全部已備份的檔案。</p>
+    <label class="mut" style="display:flex;gap:8px;align-items:center">大檔門檻（MB）<input type="number" id="lcmax" min="0" step="1" style="width:90px"></label>
+    <div class="row" style="margin-top:8px"><button class="b g" id="lcrel">釋放本機大檔</button><button class="b g" id="lcref">更新用量</button></div>
+    <div class="mut" id="lcuse" style="margin-top:8px"></div><div class="mut" id="lcmsg" style="margin-top:4px"></div>
    </div>
   </details>
   <details class="card" id="exd"><summary>匯出 CSV（Anki）</summary>
@@ -185,7 +193,7 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 </main>
 <div id="mdl" class="hide"><div class="mbox" id="mbox"></div></div>
 <div id="bot"><div id="dock"><div class="dk">
- <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selclr">取消選取</button><button class="b g sm" id="snipclr">取消框選</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">🔍 檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
+ <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
  <div id="qbox" class="hide"><div class="qtx" id="qtx"></div><button id="qx" aria-label="取消引用">✕</button></div>
  <div id="attbox" class="row hide" style="margin:0 0 6px"></div>
  <div class="row" style="flex-wrap:nowrap;margin:0;align-items:flex-end;gap:6px"><label class="plus" aria-label="上傳附件">+<input id="attf" type="file" multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.html,.xml,.log,.js,.py,.css,.ts,.yml,.yaml,text/*" hidden></label><span class="xw" style="flex:1;min-width:0;display:block"><textarea id="q" rows="1" placeholder="輸入訊息…"></textarea><button type="button" class="xb" aria-label="清除全部">✕</button></span><button class="b" id="send" style="flex:none">拍照</button><input id="cam" type="file" accept="image/*" capture="environment" hidden></div>
@@ -424,7 +432,7 @@ function render(noScroll){
   $('#chat').innerHTML=S.hist.map((h,i)=>{
     const t=txt(h),img=h.parts.find(isImg);
     const lost=h.role==='user'&&h.parts.some(p=>p.text===PHT);
-    const ab=lost?'<div class="act"><button data-m="rl" data-i="'+i+'">重新讀取</button></div>':t?'<div class="act"><button data-m="cp" data-i="'+i+'">複製</button><button data-m="qt" data-i="'+i+'">引用</button>'+(h.role==='user'?'<button data-m="ed" data-i="'+i+'">編輯</button>':'<button data-m="fd" data-i="'+i+'">檢索筆記本</button>')+'<button data-m="sv" data-i="'+i+'">存成筆記</button><button data-m="ai" data-i="'+i+'">AI製作筆記</button><button data-m="rg" data-i="'+i+'">重整</button></div>':'';
+    const ab=lost?'<div class="act"><button data-m="rl" data-i="'+i+'">重新讀取</button></div>':t?'<div class="act"><button data-m="cp" data-i="'+i+'">複製</button><button data-m="qt" data-i="'+i+'">引用</button>'+(h.role==='user'?'<button data-m="ed" data-i="'+i+'">編輯</button>':'<button data-m="fd" data-i="'+i+'">檢索筆記本</button>')+'<button data-m="sv" data-i="'+i+'">存成筆記</button><button data-m="ai" data-i="'+i+'">AI筆記</button><button data-m="rg" data-i="'+i+'">重整</button></div>':'';
     const cls=S.sel.has(i)?' sel':'';
     if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t)+'</span>'+ab+'</div>';
     return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+esc(tex(t))+'</span>'+mk(h)+ab+'</div>';
@@ -577,7 +585,7 @@ function markSel(){
   const n=selIdx().length,sn=S.snip||'';
   $('#selbar').classList.toggle('hide',!n&&!sn);
   $('#selcnt').textContent=sn?'已框選 '+sn.length+' 字':'已選取 '+n+' 則訊息';
-  $('#selall').classList.toggle('hide',!!sn);$('#selclr').classList.toggle('hide',!!sn||!n);$('#snipclr').classList.toggle('hide',!sn);$('#selps').classList.toggle('hide',!sn);
+  $('#selall').classList.toggle('hide',!!sn);$('#selps').classList.toggle('hide',!sn);
 }
 function toggleSel(i,on){
   if(!S.hist[i]||!txt(S.hist[i]))return;
@@ -585,7 +593,6 @@ function toggleSel(i,on){
   if(on===true||(on===undefined&&!S.sel.has(i)))S.sel.add(i);else S.sel.delete(i);
   markSel();
 }
-$('#selclr').onclick=()=>{S.sel.clear();markSel()};
 $('#selall').onclick=()=>{S.hist.forEach((h,i)=>{if(txt(h))S.sel.add(i)});markSel()};
 let LP=null,LP2=null,LPF=false,LPX=0,LPY=0;
 const chat=$('#chat');
@@ -621,7 +628,13 @@ document.addEventListener('selectionchange',()=>{
   S.snip=g.toString().trim();markSel();
 });
 function clearSnip(){S.snip='';document.querySelectorAll('#chat .msg.tx').forEach(x=>x.classList.remove('tx'));try{getSelection().removeAllRanges()}catch(e){}markSel()}
-$('#snipclr').onclick=clearSnip;
+/* 點空白處：取消所有選取／框選（聊天、筆記本、AI 摘要） */
+document.addEventListener('click',e=>{
+  const t=e.target;if(!t||!t.closest)return;
+  if(t.closest('.msg,.selitem,.rit,.nbar,#selbar,#mdl,#cmenu,nav,button,input,select,textarea,label,a,summary,details,[data-a],[data-m]'))return;
+  if(S.sel.size||S.snip){S.sel.clear();clearSnip()}
+  ['n','e'].forEach(k=>{const p=$('#p-'+k),c=p&&p.querySelectorAll('.selitem.sel');if(c&&c.length){c.forEach(x=>x.classList.remove('sel'));nbar(k)}});
+});
 S.clip='';
 const flash=(b,t)=>{const o=b.textContent;b.textContent=t;setTimeout(()=>{b.textContent=o},1200)};
 async function copyText(t){S.clip=t;try{await navigator.clipboard.writeText(t);return true}catch(e){try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(x){return false}}}
@@ -650,7 +663,7 @@ async function msgAct(a,i,b){
   else if(a==='rl'){
     if(typeof GDBUSY!=='undefined'&&GDBUSY){b.textContent='同步進行中，稍後再試';return}
     b.disabled=true;b.textContent='讀取中…';
-    try{await gdAuth();const fid=await gdFolder();const L=await gdList(fid);await gdFetchImgs(L.m);const n=await restoreImgs();if(!n){b.textContent='雲端找不到這張圖';b.disabled=false;setTimeout(()=>{if(b.isConnected)b.textContent='重新讀取'},2500)}}
+    try{await gdAuth();const fid=await gdFolder();const L=await gdList(fid);await gdFetchImgs(L.m,{force:true});const n=await restoreImgs();if(!n){b.textContent='雲端找不到這張圖';b.disabled=false;setTimeout(()=>{if(b.isConnected)b.textContent='重新讀取'},2500)}}
     catch(x){b.disabled=false;b.textContent='失敗，再按一次重試';gdmsg&&gdmsg('重新讀取失敗：'+gerr(x),1)}
   }
   else if(a==='sv')saveFlow([i]);
@@ -828,7 +841,7 @@ function nbar(k){
   if(!n){b.classList.add('hide');b.innerHTML='';sp.style.height='0';return}
   const B=(a,t,x)=>'<button class="b g sm" data-a="'+a+'"'+(x||'')+'>'+t+'</button>';
   b.innerHTML='<div class="dk"><div class="row" style="margin:0"><span class="mut" style="width:100%">已選取 '+(cf?cf+' 個資料夾':'')+(cf&&cn?'、':'')+(cn?cn+' 則筆記':'')+'</span>'
-    +(n<tot?B('sa','全選'):'')+B('sc','取消選取')
+    +(n<tot?B('sa','全選'):'')
     +(n===1?B('rn',cn?'編輯標題':'改名'):'')+(n===1&&cn===1?B('eb','編輯內容'):'')
     +(cn&&!cf?B('ai',k==='n'?(cn===1?'AI摘要':'AI整併摘要'):'AI 整併'):'')
     +B('dl','刪除',' style="color:var(--warn);border-color:var(--warn)"')+'</div></div>';
@@ -870,8 +883,7 @@ async function lazyThumbs(k){
 }
 async function zoomF(nid,j){
   const n=notes().find(x=>x.id===nid),f=n&&(n.files||[])[+j];if(!f)return;
-  const b=await imgGet(f.iid);
-  if(!b){alert('這張圖不在這台裝置上，請先按「同步到 Drive」');return}
+  const b=await ensureLocal(f.iid,f.name);if(!b)return;
   const u=URL.createObjectURL(b);
   openMdl('<div class="row" style="margin-bottom:8px"><button class="b g sm" id="zt">放大</button><button class="b sm" id="mcx">關閉</button><span class="mut">'+esc(f.name)+'</span></div><div style="overflow:auto;max-height:72vh;border-radius:8px"><img id="zimg" src="'+u+'" style="display:block;width:100%;max-width:none"></div>');
 }
@@ -880,7 +892,7 @@ async function zoomImg(nid){
   openMdl('<p class="mut">載入原圖…</p>');
   const full=await imgGet(n.iid),src=full||n.img;
   if(!src){closeMdl();return}
-  openMdl('<div class="row" style="margin-bottom:8px"><button class="b g sm" id="zt">放大</button><button class="b sm" id="mcx">關閉</button><span class="mut">'+(full?'原圖':'只有縮圖（舊筆記，或原圖不在這台裝置）')+'</span></div><div style="overflow:auto;max-height:72vh;border-radius:8px"><img id="zimg" src="'+src+'" style="display:block;width:100%;max-width:none"></div>');
+  openMdl('<div class="row" style="margin-bottom:8px"><button class="b g sm" id="zt">放大</button><button class="b sm" id="mcx">關閉</button><span class="mut">'+(full?'原圖':'只有縮圖（舊筆記，或原圖不在這台裝置）')+'</span>'+(!full&&n.iid?'<button class="b g sm" onclick="dlOrig(\''+n.id+'\',this)">下載原圖</button>':'')+'</div><div style="overflow:auto;max-height:72vh;border-radius:8px"><img id="zimg" src="'+src+'" style="display:block;width:100%;max-width:none"></div>');
 }
 ['n','e'].forEach(k=>$('#p-'+k).onclick=e=>{
   const t=e.target.closest('[data-a]');if(!t)return;
@@ -1038,15 +1050,13 @@ const atts=n=>[...(n.file?[{iid:n.iid,name:n.file.name,type:n.file.type,size:n.f
 const FB=n=>{const a=atts(n);return a.length?'<div class="act">'+a.map((f,j)=>'<button data-a="fo" data-i="'+n.id+'" data-j="'+j+'">📎 '+esc(f.name)+'（'+Math.max(1,Math.round((f.size||0)/1024))+' KB）</button>').join('')+'</div>':''};
 async function openFile2(id,j){
   const n=notes().find(x=>x.id===id);if(!n)return;const f=atts(n)[+j||0];if(!f)return;
-  const b=await imgGet(f.iid);
-  if(!b){alert('這個檔案不在這台裝置上，請先按「同步到 Drive」');return}
+  const b=await ensureLocal(f.iid,f.name);if(!b)return;
   const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(u),10000);
 }
 async function openFile(id){
   const n=notes().find(x=>x.id===id);if(!n||!n.file)return;
-  const b=await imgGet(n.iid);
-  if(!b){alert('這個檔案不在這台裝置上，請先到「設定」按「同步到 Drive」');return}
+  const b=await ensureLocal(n.iid,n.file.name);if(!b)return;
   const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=n.file.name;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(u),10000);
 }
@@ -1445,26 +1455,83 @@ $('#gdauto').checked=ls.get('oc_gd_auto','1')==='1';$('#gdauto').onchange=()=>{l
 $('#gddest').onchange=()=>{ls.set('oc_gd_dest',$('#gddest').value)};
 /* ===== 以 Google 登入／合併同步／自動清理 ===== */
 $('#glogin').onclick=async()=>{try{gdmsg('登入中…');GD.tok='';GD.force=true;const em=await whoTok(await gdAuth());ls.set('oc_gd_amail',em);gdFill();gdmsg('已登入：'+em)}catch(e){gdmsg('失敗：'+gerr(e),1)}};
-async function gdFetchImgs(m){
-  let n=0,miss=0,le='';const list=[];
+/* ===== 本機釋放／按需下載 ===== */
+const REL=()=>{try{return JSON.parse(localStorage.getItem('oc_rel')||'{}')||{}}catch(e){return{}}};
+const unrel=i=>{const r=REL();if(r[i]){delete r[i];try{localStorage.setItem('oc_rel',JSON.stringify(r))}catch(e){}}};
+const MAXDL=()=>{const v=parseFloat(ls.get('oc_gd_maxdl','20'));return isNaN(v)||v<0?20:v};
+async function gdFetchImgs(m,opt){
+  opt=opt||{};let n=0,miss=0,le='',sk=0;const list=[],rl=REL(),mx=MAXDL()*1e6;
   for(const x of imgRefs()){
+    if(opt.only&&x.iid!==opt.only)continue;
     if(await imgGet(x.iid))continue;
     const id=m['img_'+x.iid];if(!id){miss++;continue}
-    list.push({x,id,sz:GDSZ[id]||0});
+    const sz=GDSZ[id]||0;
+    if(!opt.only&&!opt.force&&(rl[x.iid]||(mx>0&&sz>mx))){sk++;continue}
+    list.push({x,id,sz});
   }
-  if(!list.length)return{n,miss,le};
+  if(!list.length)return{n,miss,le,sk};
   const tot=list.reduce((a,y)=>a+y.sz,0),byB=tot>0;let done=0;
   PG.show('Drive 下載');
   for(let i=0;i<list.length;i++){
     const y=list[i],lab='Drive 下載 '+(i+1)+'/'+list.length+'：'+(y.x.title||'檔案');
     const f=byB?(l=>PG.set(done+Math.min(l,y.sz||l),tot,lab,true)):null;
     if(byB)PG.set(done,tot,lab,true);else PG.set(i,list.length,lab);
-    try{await imgPut(y.x.iid,unpackImg(await unwrap(await gdGet(y.id,f?((l)=>f(l)):null))));n++}catch(e){miss++;le=gerr(e)}
+    try{if(!await imgPut(y.x.iid,unpackImg(await unwrap(await gdGet(y.id,f?((l)=>f(l)):null)))))throw new Error('本機空間不足');n++;unrel(y.x.iid)}catch(e){miss++;le=gerr(e)}
     done+=y.sz;
   }
   PG.end('Drive 下載完成，'+n+' 個檔案');
-  return{n,miss,le};
+  return{n,miss,le,sk};
 }
+async function fetchOne(iid){
+  if(GDBUSY)throw new Error('同步進行中，請稍後再試');
+  await gdAuth();const fid=await gdFolder();const L=await gdList(fid);
+  const r=await gdFetchImgs(L.m,{only:iid});
+  if(!await imgGet(iid))throw new Error(r.miss?'雲端找不到這個檔案':(r.le||'下載失敗'));
+}
+async function ensureLocal(iid,name){
+  const b=await imgGet(iid);if(b)return b;
+  if(!confirm('「'+(name||'檔案')+'」不在這台裝置上，要從 Drive 下載嗎？'))return null;
+  try{await fetchOne(iid)}catch(e){alert('下載失敗：'+(e&&e.message?e.message:e));return null}
+  return imgGet(iid);
+}
+async function dlOrig(nid,btn){
+  const n=notes().find(x=>x.id===nid);if(!n)return;
+  btn.disabled=true;btn.textContent='下載中…';
+  try{await fetchOne(n.iid);zoomImg(nid)}catch(e){btn.disabled=false;btn.textContent='下載原圖';alert('下載失敗：'+(e&&e.message?e.message:e))}
+}
+const mbf=b=>b>=1e9?(b/1e9).toFixed(2)+' GB':(b/1e6).toFixed(1)+' MB';
+async function idbScan(){const d=await idb();return new Promise(res=>{const a=[],q=d.transaction('i').objectStore('i').openCursor();q.onsuccess=()=>{const c=q.result;if(c){const v=c.value;a.push({id:c.key,sz:(v&&(v.size||v.length))||0});c.continue()}else res(a)};q.onerror=()=>res(a)})}
+const imgDelW=async id=>{try{const d=await idb();return await new Promise(res=>{const t=d.transaction('i','readwrite');t.objectStore('i').delete(id);t.oncomplete=()=>res(true);t.onerror=t.onabort=()=>res(false)})}catch(e){return false}};
+async function lcUse(){
+  const el=$('#lcuse');if(!el)return;
+  try{
+    const a=await idbScan(),tot=a.reduce((s,x)=>s+x.sz,0),th=MAXDL()*1e6,big=th>0?a.filter(x=>x.sz>=th).length:0,rel=Object.keys(REL()).length;
+    let q='';try{const e=await navigator.storage.estimate();if(e&&e.quota)q='；瀏覽器已用 '+mbf(e.usage||0)+'／可用上限約 '+mbf(e.quota)}catch(x){}
+    el.textContent='本機檔案 '+a.length+' 個，共 '+mbf(tot)+(th>0?'（≥'+MAXDL()+' MB 的有 '+big+' 個）':'')+(rel?'；已釋放 '+rel+' 個':'')+q;
+  }catch(e){el.textContent='讀取用量失敗'}
+}
+$('#lcmax').value=MAXDL();
+$('#lcmax').onchange=()=>{const v=parseFloat($('#lcmax').value);ls.set('oc_gd_maxdl',String(isNaN(v)||v<0?20:v));$('#lcmax').value=MAXDL();lcUse()};
+$('#lcref').onclick=lcUse;
+document.querySelector('nav button[data-t="set"]').addEventListener('click',()=>setTimeout(lcUse,60));
+$('#lcrel').onclick=async()=>{
+  const el=$('#lcmsg');
+  if(GDBUSY){el.textContent='同步進行中，稍後再試';return}
+  const th=MAXDL()*1e6;
+  try{
+    el.textContent='檢查雲端備份中…';
+    await gdAuth();const fid=await gdFolder();const L=await gdList(fid);
+    const refs=new Set(imgRefs().map(r=>r.iid)),a=(await idbScan()).filter(x=>refs.has(x.id)&&x.sz>=th);
+    const ok=a.filter(x=>L.m['img_'+x.id]),no=a.length-ok.length;
+    if(!ok.length){el.textContent='沒有可釋放的檔案'+(no?'（有 '+no+' 個尚未備份到雲端，已保留）':'');return}
+    const tot=ok.reduce((s,x)=>s+x.sz,0);
+    if(!confirm('將釋放 '+ok.length+' 個檔案，約 '+mbf(tot)+'。雲端備份不會被刪除，之後點開時會再下載。'+(no?'\n另有 '+no+' 個尚未備份到雲端，會保留。':'')+'\n確定嗎？')){el.textContent='';return}
+    const r=REL();let c=0;
+    for(const x of ok){if(await imgDelW(x.id)){r[x.id]=1;c++}}
+    localStorage.setItem('oc_rel',JSON.stringify(r));
+    el.textContent='已釋放 '+c+' 個檔案，約 '+mbf(tot);lcUse();
+  }catch(e){el.textContent='失敗：'+gerr(e)}
+};
 async function gdSweep(fid){
   const used=new Set(imgRefs().map(r=>r.iid));let a=0,b=0;
   const inF=await gdLsAll(gdf,'q='+encodeURIComponent("'"+fid+"' in parents and trashed=false"));
@@ -1548,7 +1615,7 @@ async function gdSync(silent){
     let sw=null;if(!silent)sw=await gdSweep(fid);
     fillApis();if(!ED){draw('n');draw('e')}drawHist();
     const tm=new Date().toLocaleTimeString('zh-TW');
-    gdmsg((silent?'已自動同步 '+tm:'同步完成 '+tm)+(changed?'（已更新雲端）':'（雲端已是最新）')+(o.up?'；上傳 '+o.up+' 個圖片檔案':'')+(o.fb?'（'+o.fb+' 個儲存帳號失敗，改存共用資料夾）':'')+(o.wait?'；'+o.wait+' 個檔案等待儲存帳號授權':'')+(o.skip?'；'+o.skip+' 個超過 200MB 未上傳':'')+(sw&&(sw.a||sw.b)?'；清理沒在用的雲端圖片 '+(sw.a+sw.b)+' 個':'')+(f.n?'；下載 '+f.n+' 個檔案':'')+(f.miss?'；'+f.miss+' 個檔案在 Drive 找不到'+(f.le?'（'+f.le+'）':''):''));
+    gdmsg((silent?'已自動同步 '+tm:'同步完成 '+tm)+(changed?'（已更新雲端）':'（雲端已是最新）')+(o.up?'；上傳 '+o.up+' 個圖片檔案':'')+(o.fb?'（'+o.fb+' 個儲存帳號失敗，改存共用資料夾）':'')+(o.wait?'；'+o.wait+' 個檔案等待儲存帳號授權':'')+(o.skip?'；'+o.skip+' 個超過 200MB 未上傳':'')+(sw&&(sw.a||sw.b)?'；清理沒在用的雲端圖片 '+(sw.a+sw.b)+' 個':'')+(f.n?'；下載 '+f.n+' 個檔案':'')+(f.sk?'；略過 '+f.sk+' 個大檔（點開時才下載）':'')+(f.miss?'；'+f.miss+' 個檔案在 Drive 找不到'+(f.le?'（'+f.le+'）':''):''));
     if(!silent)gdSpace();
   }catch(e){PG.end('Drive 同步失敗',1);gdmsg('失敗：'+gerr(e),1)}
   finally{SYNCING=false;GDBUSY=false;if(+ls.get('oc_mod','0')>t0&&window.schedDrive)window.schedDrive()}
