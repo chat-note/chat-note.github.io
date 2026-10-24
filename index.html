@@ -147,20 +147,21 @@ body.kbo #dock{padding-bottom:8px}
 #lgw{flex:none;margin-left:auto;display:flex;flex-direction:column;align-items:center;line-height:1}
 #top #lgw b#lgo{margin-left:0}
 #ver{font-size:11px;color:var(--mut);margin-top:3px;white-space:nowrap}
-.msg .tm{display:none;font-size:12px;color:var(--mut);margin-top:6px}
+.msg .tm{display:none;font-size:12px;color:var(--mut);margin-top:6px;text-align:right;white-space:normal}
 .msg.sel .tm{display:block}
+#top b#lgo.fail::after{content:"";position:absolute;top:-4px;right:-4px;width:11px;height:11px;border-radius:50%;background:#e5484d;border:2px solid var(--bg)}
 #qcard{margin:12px 0 0;border-radius:18px;padding:14px 16px}
 #qcard .qt{font-size:16px;font-weight:600;margin:0 0 8px}
 #qcard .qb{height:8px;border-radius:99px;background:var(--bd);overflow:hidden;margin:0 0 8px}
 #qcard .qf{height:100%;border-radius:99px;background:var(--acc);min-width:8px}
 #qcard .ql{display:flex;gap:18px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
-#qcard .ql a,#qcard .ql button{color:var(--acc);font-weight:600;font-size:14px;text-decoration:none;background:none;border:0;padding:4px 0;cursor:pointer}
+#qcard .ql button{color:var(--acc);font-weight:600;font-size:16px;background:none;border:1.5px solid var(--acc);border-radius:10px;padding:9px 24px;cursor:pointer}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver">v2026.10.24-b</small></span></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-c</small></span></header>
 <section id="p-learn">
  <div class="mut gdt" style="margin:0 0 6px"></div>
  <div id="chat"></div>
@@ -498,8 +499,8 @@ function render(noScroll){
     const lost=h.role==='user'&&h.parts.some(p=>p.text===PHT);
     const ab=lost?'<div class="act"><button data-m="rl" data-i="'+i+'">重新讀取</button></div>':t?'<div class="act"><button data-m="cp" data-i="'+i+'">複製</button><button data-m="sh" data-i="'+i+'">分享</button><button data-m="qt" data-i="'+i+'">引用</button>'+(h.role==='user'?'<button data-m="ed" data-i="'+i+'">編輯</button>':'<button data-m="fd" data-i="'+i+'">檢索筆記本</button>')+'<button data-m="sv" data-i="'+i+'">存成筆記</button><button data-m="ai" data-i="'+i+'">AI筆記</button><button data-m="rg" data-i="'+i+'">重整</button></div>':'';
     const cls=S.sel.has(i)?' sel':'';
-    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t)+'</span>'+tm+ab+'</div>';
-    return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+esc(tex(t))+'</span>'+mk(h)+tm+ab+'</div>';
+    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t)+'</span>'+ab+tm+'</div>';
+    return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+esc(tex(t))+'</span>'+mk(h)+ab+tm+'</div>';
   }).join('');
   markSel();
   if(!noScroll)window.scrollTo(0,document.body.scrollHeight);
@@ -764,7 +765,16 @@ async function zoomChat(i){
   const h=S.hist[i];if(!h)return;const p=h.parts.find(isImg);if(!p)return;
   const full=h.oid?await imgGet(h.oid):null;
   const src=full?(typeof full==='string'?full:URL.createObjectURL(full)):'data:'+p.inline_data.mime_type+';base64,'+p.inline_data.data;
-  openMdl('<div class="row" style="margin-bottom:8px"><button class="b g sm" id="zt">放大</button><button class="b sm" id="mcx">關閉</button><span class="mut">'+(full?'原圖':'縮小版（原圖不在這台裝置）')+'</span></div><div style="overflow:auto;max-height:72vh;border-radius:8px"><img id="zimg" src="'+src+'" style="display:block;width:100%;max-width:none"></div>');
+  openMdl('<div class="row" style="margin-bottom:8px"><button class="b g sm" id="zt">放大</button><button class="b g sm" onclick="chatImgShare('+i+')">分享</button><button class="b sm" id="mcx">關閉</button><span class="mut">'+(full?'原圖':'縮小版（原圖不在這台裝置）')+'</span></div><div style="overflow:auto;max-height:72vh;border-radius:8px"><img id="zimg" src="'+src+'" style="display:block;width:100%;max-width:none"></div>');
+}
+async function chatImgShare(i){
+  const h=S.hist[i],p=h&&h.parts.find(isImg);if(!p)return;
+  let v=h.oid?await imgGet(h.oid):null;
+  try{
+    if(!v)v=await (await fetch('data:'+p.inline_data.mime_type+';base64,'+p.inline_data.data)).blob();
+    else if(typeof v==='string')v=await (await fetch(v)).blob();
+  }catch(e){alert('圖片讀取失敗');return}
+  await shareOut('Chatnote','',[new File([v],'chatnote.jpg',{type:v.type||'image/jpeg'})]);
 }
 function quote(i){
   let t=tex(txt(S.hist[i])).trim();if(t.length>500)t=t.slice(0,500)+'…';
@@ -1434,11 +1444,23 @@ const gdf=async(u,o)=>{const t=await gdAuth();const r=await fetch(u,Object.assig
 const GDSZ={};
 const OCF='oc-notes-shared';
 /* 主資料夾解析：成員一律用「主帳擁有」的共用資料夾，不會各自建一份；第一次沒有主帳時，看得到別人共用的就加入，否則自己當主帳 */
+const MVCK={};
 async function gdFolder(){
   const me=ME()||await mailA();
   const q=encodeURIComponent("mimeType='application/vnd.google-apps.folder' and name='"+OCF+"' and trashed=false");
   const fs=((await(await gdf(GAPI+'files?q='+q+'&fields=files(id,createdTime,ownedByMe,owners(emailAddress))&orderBy=createdTime')).json()).files)||[];
   const own=fs.filter(f=>f.ownedByMe),oth=fs.filter(f=>!f.ownedByMe),ow=f=>(((f.owners||[])[0]||{}).emailAddress||'').toLowerCase();
+  /* 這台裝置記的主帳已過時（主帳在別台裝置搬到本帳號了）：本帳號自己的資料夾若登記主帳就是自己，就改認自己為主帳 */
+  {const m0=MAIN(),k0=me+'|'+m0;
+   if(m0&&m0!==me&&own[0]&&!MVCK[k0]){MVCK[k0]=1;
+     try{
+       const nf=(await gdLsAll(gdf,'q='+encodeURIComponent("'"+own[0].id+"' in parents and trashed=false and name='notes.json'")))[0];
+       if(nf){const r=JSON.parse(await gdGet(nf.id));
+         if(r&&r.acc&&String(r.acc.main||'').toLowerCase()===me){
+           ls.set('oc_gd_main',me);sv('oc_gd_accts',[]);sv('oc_gd_amt',{});sv('oc_gd_adel',{});sv('oc_gd_loc',{});ls.set('oc_gd_dest','a');
+           Object.keys(GT).forEach(k=>delete GT[k]);try{gdFill()}catch(e){}
+         }}
+     }catch(e){}}}
   const main=MAIN();let pick=null;
   if(main&&main!==me){pick=oth.find(f=>ow(f)===main)||null}
   else if(main&&main===me){pick=own[0]||null}
@@ -1541,13 +1563,13 @@ const fmtQ=n=>{n=+n||0;const g=n/1073741824;if(g>=1024)return Number((g/1024).to
 function drawQuota(note){
   const el=$('#qcard');if(!el)return;
   let q=null;try{q=JSON.parse(localStorage.getItem(QK)||'null')}catch(e){}
-  const bt='<div class="ql"><a href="https://one.google.com/about/plans" target="_blank" rel="noopener">購買儲存空間</a><a href="https://one.google.com/storage/management" target="_blank" rel="noopener">清理儲存空間</a><button id="qref">更新</button></div>';
+  const bt='<div class="ql"><button id="qref">更新</button></div>';
   if(!q){el.innerHTML='<div class="qt">☁ 雲端空間</div><div class="mut">'+esc(note||'登入 Google 並同步後，這裡會顯示空間用量。按「更新」可立即查詢。')+'</div>'+bt;return}
   const has=q.l>0,pct=has?Math.min(100,q.u/q.l*100):0;
   el.innerHTML='<div class="qt">☁ 已使用 '+(has?Math.round(pct)+'% (共 '+fmtQ(q.l)+')':fmtQ(q.u)+'（無上限）')+'</div>'
     +(has?'<div class="qb"><div class="qf" style="width:'+Math.max(pct,1).toFixed(1)+'%"></div></div>':'')
     +'<div class="mut">已使用 '+fmtQ(q.u)+(has?' (共 '+fmtQ(q.l)+')':'')+'</div>'
-    +'<div class="mut" style="margin-top:4px">'+esc(q.e||'')+'・'+esc(new Date(q.t).toLocaleString('zh-TW',{hour12:false}))+(note?'<br><span class="err">'+esc(note)+'</span>':'')+'</div>'+bt;
+    +'<div class="mut" style="margin-top:6px">'+esc(q.e||'')+'</div><div class="mut">更新時間：'+esc(new Date(q.t).toLocaleString('zh-TW',{hour12:false}))+'</div>'+(note?'<div class="mut"><span class="err">'+esc(note)+'</span></div>':'')+bt;
 }
 async function loadQuota(inter){
   if(!inter&&!(GD.tok&&Date.now()<GD.exp)){drawQuota();return}
@@ -1949,7 +1971,8 @@ async function ghSync(silent){
 }
 /* 橘點＝有尚未同步完成的變動（本機最後修改時間 > 最後一次完整同步成功的時間） */
 const dirty=()=>+ls.get('oc_mod','0')>+ls.get('oc_synced','0');
-const updNeed=()=>{const lg=$('#lgo');if(!lg)return;lg.classList.toggle('need',dirty())};
+const failed=()=>ls.get('oc_syncfail','')==='1';
+const updNeed=()=>{const lg=$('#lgo');if(!lg)return;const f=failed();lg.classList.toggle('fail',f);lg.classList.toggle('need',!f&&dirty())};
 window.updNeed=updNeed;
 /* 一次同步：先 Gist（文字，隨時可用），再 Drive（圖片與附件，需要授權有效） */
 let LASTSYNC=null;
@@ -1983,6 +2006,7 @@ async function syncAll(silent){
     fin=true;
   }finally{
     SYNCALL=false;MIGDONE=false;LASTSYNC={ok:all&&fin};
+    {const bad=!(all&&fin)&&(!silent||gr.err||derr||!fin);try{if(all&&fin)localStorage.removeItem('oc_syncfail');else if(bad)localStorage.setItem('oc_syncfail','1')}catch(e){}}
     const l2=$('#lgo');if(l2)l2.classList.remove('syn');updNeed();
     if(all&&fin)topmsg(new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false})+' 同步完成');
     else topmsg((fin&&silent&&!gr.err&&!derr)?'':(fin?'同步未完成，詳情見設定':'同步失敗'),1);
@@ -2022,7 +2046,7 @@ function showTab(t){
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
   $('#tbc').classList.toggle('on',t==='learn');$('#nbk').classList.toggle('on',t==='n');$('#ebk').classList.toggle('on',t==='e');
   ['learn','n','e','set'].forEach(x=>$('#p-'+x).classList.toggle('hide',x!==t));
-  $('#dock').classList.toggle('hide',t!=='learn');lay();
+  $('#dock').classList.toggle('hide',t!=='learn');$('#ver').classList.toggle('hide',t!=='set');lay();
   if(t==='n'||t==='e')draw(t);
   if(t==='set'){goHome();exFill()}
 }
