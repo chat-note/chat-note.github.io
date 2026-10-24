@@ -1144,7 +1144,7 @@ function draw(k){
     const r=N.filter(n=>n.fid===fid&&hit(n));
     d=list(r)+(q&&!r.length?'<button class="b g sm" data-a="gs">改搜全部資料夾</button>':'');
   }else if(!q){
-    h='<div class="hd"><span class="mut">資料夾（科目）</span><button class="b g sm" data-a="nf">＋新資料夾</button></div>';
+    h='<div class="hd"><span class="mut">資料夾</span><button class="b g sm" data-a="nf">＋新資料夾</button></div>';
     d=F.length?F.map(fc).join(''):'<p class="mut">還沒有資料夾。按「＋新資料夾」建立科目，例如：英文、數學、優惠。也可以在「聊天」頁存筆記時直接新增。</p>';
   }else{
     h='<div class="hd"><span class="mut">搜尋結果（所有資料夾）</span></div>';
