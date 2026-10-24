@@ -90,6 +90,8 @@ details summary{cursor:pointer;color:var(--acc);font-weight:600}
 #dock #send{height:44px;padding:0 18px;box-sizing:border-box;line-height:1}
 #cmenu{position:fixed;left:8px;bottom:calc(var(--bt,56px) + var(--kb,0px) + 8px);z-index:40;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 #cmenu.hide{display:none}
+#amenu{position:fixed;left:8px;bottom:calc(var(--bt,56px) + var(--kb,0px) + 8px);z-index:40;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#amenu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);font-size:16px;padding:12px 18px;border-radius:6px;cursor:pointer;white-space:nowrap}
 #cmenu button{display:block;width:100%;text-align:left;background:none;border:0;color:var(--fg);font-size:16px;padding:12px 18px;border-radius:6px;cursor:pointer}
 #dbk{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60}#dbk.hide{display:none}
 #drw{position:fixed;top:0;bottom:0;left:0;width:78%;max-width:320px;background:var(--card);z-index:61;transform:translateX(-100%);transition:transform .2s;padding:16px;overflow:auto;box-shadow:4px 0 16px rgba(0,0,0,.25)}
@@ -246,9 +248,9 @@ body.kbo #dock{padding-bottom:8px}
  <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selclr">取消選取</button><button class="b g sm" id="snipclr">取消選取</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selsh">分享</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
  <div id="qbox" class="hide"><div class="qtx" id="qtx"></div><button id="qx" aria-label="取消引用">✕</button></div>
  <div id="attbox" class="row hide" style="margin:0 0 6px"></div>
- <div class="row" style="flex-wrap:nowrap;margin:0;align-items:flex-end;gap:6px"><label class="plus" aria-label="上傳附件">+<input id="attf" type="file" multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.html,.xml,.log,.js,.py,.css,.ts,.yml,.yaml,text/*" hidden></label><span class="xw" style="flex:1;min-width:0;display:block"><textarea id="q" rows="1" placeholder="輸入訊息…"></textarea><button type="button" class="xb" aria-label="清除全部">✕</button></span><button class="b" id="send" style="flex:none">拍照</button><input id="cam" type="file" accept="image/*" capture="environment" hidden></div>
+ <div class="row" style="flex-wrap:nowrap;margin:0;align-items:flex-end;gap:6px"><button type="button" class="plus" id="plus" aria-label="上傳附件" style="background:none;font-family:inherit;padding:0">+</button><input id="attf" type="file" multiple accept=".pdf,.txt,.md,.csv,.json,.html,.xml,.log,.js,.py,.css,.ts,.yml,.yaml,text/*" hidden><input id="pic" type="file" multiple accept="image/*" hidden><span class="xw" style="flex:1;min-width:0;display:block"><textarea id="q" rows="1" placeholder="輸入訊息…"></textarea><button type="button" class="xb" aria-label="清除全部">✕</button></span><button class="b" id="send" style="flex:none">拍照</button><input id="cam" type="file" accept="image/*" capture="environment" hidden></div>
 </div></div>
-<nav><button data-t="learn" class="on">聊天</button><button data-t="n">筆記本</button><button data-t="e">AI 摘要</button><button data-t="set">設定</button></nav></div><div id="cmenu" class="hide"><button id="reset">新聊天</button><button id="swc">切換聊天</button></div>
+<nav><button data-t="learn" class="on">聊天</button><button data-t="n">筆記本</button><button data-t="e">AI 摘要</button><button data-t="set">設定</button></nav></div><div id="cmenu" class="hide"><button id="reset">新聊天</button><button id="swc">切換聊天</button></div><div id="amenu" class="hide"><button data-am="cam">📷 拍照</button><button data-am="pic">🖼 選擇圖片</button><button data-am="file">📎 選擇檔案（PDF、文字）</button></div>
 <div id="dbk" class="hide"></div><aside id="drw"></aside>
 <div id="mbk" class="hide"></div><aside id="mnu"><button data-go="new">＋ 新聊天</button><hr style="border:0;border-top:1px solid var(--bd);margin:8px 0"><button data-t="learn">聊天</button><button data-t="n">筆記本</button><button data-t="e">AI 摘要</button><button data-t="set">設定</button><hr style="border:0;border-top:1px solid var(--bd);margin:8px 0">
   <details id="hist" open><summary>聊天紀錄（<span id="hcnt">0</span>）</summary><div id="hlist"></div></details>
@@ -562,7 +564,7 @@ function render(noScroll){
     const lost=h.role==='user'&&h.parts.some(p=>p.text===PHT);
     const ab=lost?'<div class="act"><button data-m="rl" data-i="'+i+'">重新讀取</button></div>':t?'<div class="act"><button data-m="cp" data-i="'+i+'">複製</button><button data-m="sh" data-i="'+i+'">分享</button><button data-m="qt" data-i="'+i+'">引用</button>'+(h.role==='user'?'<button data-m="ed" data-i="'+i+'">編輯</button>':'<button data-m="fd" data-i="'+i+'">檢索筆記本</button>')+'<button data-m="sv" data-i="'+i+'">存成筆記</button><button data-m="ai" data-i="'+i+'">AI筆記</button><button data-m="rg" data-i="'+i+'">重整</button></div>':'';
     const cls=S.sel.has(i)?' sel':'';
-    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+linkify(esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t))+'</span>'+ab+tm+'</div>';
+    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+h.parts.filter(isImg).map((im,j)=>'<img class="pv" data-z="'+i+'" data-zj="'+j+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+im.inline_data.data+'">').join('')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+linkify(esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t))+'</span>'+ab+tm+'</div>';
     return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+linkify(esc(tex(t)))+'</span>'+mk(h)+ab+tm+'</div>';
   }).join('');
   markSel();
@@ -674,6 +676,10 @@ async function stage(fs){
   drawAtt();
 }
 $('#attf').onchange=e=>{const fs=[...e.target.files];e.target.value='';stage(fs)};
+$('#pic').onchange=e=>{const fs=[...e.target.files];e.target.value='';stage(fs)};
+$('#plus').onclick=()=>$('#amenu').classList.toggle('hide');
+$('#amenu').onclick=e=>{const b=e.target.closest('button[data-am]');if(!b)return;$('#amenu').classList.add('hide');({cam:'#cam',pic:'#pic',file:'#attf'})[b.dataset.am]&&$(({cam:'#cam',pic:'#pic',file:'#attf'})[b.dataset.am]).click()};
+document.addEventListener('click',e=>{if(!e.target.closest('#amenu,#plus'))$('#amenu').classList.add('hide')});
 $('#send').onclick=async()=>{
   if(S.busy){if(S.ctl)try{S.ctl.abort('user')}catch(e){}return}
   const t=$('#q').value.trim();
@@ -924,7 +930,7 @@ $('#selps').onclick=async()=>{let t=await clipRich();if(!t)t=S.clip;if(!t)return
 chat.addEventListener('contextmenu',e=>{if(e.target.closest('.msg:not(.tx)')&&!e.target.closest('a'))e.preventDefault()});
 chat.addEventListener('click',e=>{
   if(LPF){LPF=false;return}
-  const z=e.target.closest('img[data-z]');if(z&&!S.sel.size&&!S.snip){zoomChat(+z.dataset.z);return}
+  const z=e.target.closest('img[data-z]');if(z&&!S.sel.size&&!S.snip){zoomChat(+z.dataset.z,+(z.dataset.zj||0));return}
   const tg=e.target.closest('.tag[data-cp]');
   if(tg){copyText('#'+tg.dataset.cp).then(ok=>{const o=tg.textContent;tg.textContent=ok?'已複製':'複製失敗';setTimeout(()=>{tg.textContent=o},1000)});return}
   const b=e.target.closest('button[data-m]');
@@ -971,15 +977,15 @@ function editMsg(i){
   MD={kind:'edit',i};
   openMdl('<h3>編輯訊息</h3><textarea id="emt" rows="7">'+esc(tp?tp.text:'')+'</textarea><p class="mut">按「確認」後，會刪除這則之後的訊息，並把修改後的內容重新送給 AI 回應。</p><div class="row" style="margin-top:8px"><button class="b" id="emok">確認</button><button class="b g" id="mcx">取消</button></div>');
 }
-async function zoomChat(i){
-  const h=S.hist[i];if(!h)return;const p=h.parts.find(isImg);if(!p)return;
-  const full=h.oid?await imgGet(h.oid):null;
+async function zoomChat(i,j){
+  j=j||0;const h=S.hist[i];if(!h)return;const p=h.parts.filter(isImg)[j];if(!p)return;
+  const full=(h.oid&&j===0)?await imgGet(h.oid):null;
   const src=full?(typeof full==='string'?full:URL.createObjectURL(full)):'data:'+p.inline_data.mime_type+';base64,'+p.inline_data.data;
-  openMdl('<div class="row" style="margin-bottom:8px"><button class="b g sm" id="zt">放大</button><button class="b g sm" onclick="chatImgShare('+i+')">分享</button><button class="b sm" id="mcx">關閉</button><span class="mut">'+(full?'原圖':'縮小版（原圖不在這台裝置）')+'</span></div><div style="overflow:auto;max-height:72vh;border-radius:8px"><img id="zimg" src="'+src+'" style="display:block;width:100%;max-width:none"></div>');
+  openMdl('<div class="row" style="margin-bottom:8px"><button class="b g sm" id="zt">放大</button><button class="b g sm" onclick="chatImgShare('+i+','+j+')">分享</button><button class="b sm" id="mcx">關閉</button><span class="mut">'+(full?'原圖':'縮小版（原圖不在這台裝置）')+'</span></div><div style="overflow:auto;max-height:72vh;border-radius:8px"><img id="zimg" src="'+src+'" style="display:block;width:100%;max-width:none"></div>');
 }
-async function chatImgShare(i){
-  const h=S.hist[i],p=h&&h.parts.find(isImg);if(!p)return;
-  let v=h.oid?await imgGet(h.oid):null;
+async function chatImgShare(i,j){
+  j=j||0;const h=S.hist[i],p=h&&h.parts.filter(isImg)[j];if(!p)return;
+  let v=(h.oid&&j===0)?await imgGet(h.oid):null;
   try{
     if(!v)v=await (await fetch('data:'+p.inline_data.mime_type+';base64,'+p.inline_data.data)).blob();
     else if(typeof v==='string')v=await (await fetch(v)).blob();
