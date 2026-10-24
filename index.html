@@ -154,7 +154,8 @@ body.kbo #dock{padding-bottom:8px}
 .msg.sel .tm{display:block}
 #top b#lgo.fail::after{content:"";position:absolute;top:-4px;right:-4px;width:11px;height:11px;border-radius:50%;background:#e5484d;border:2px solid var(--bg)}
 #qcard{margin:12px 0 0;border-radius:18px;padding:14px 16px}
-#qcard .qt{font-size:16px;font-weight:600;margin:0 0 8px}
+#qcard .qt{font-size:16px;font-weight:600;margin:0 0 8px;display:flex;align-items:center;gap:6px}
+.qt svg{width:22px;height:22px;flex:none}
 #qcard .qb{height:8px;border-radius:99px;background:var(--bd);overflow:hidden;margin:0 0 8px}
 #qcard .qf{height:100%;border-radius:99px;background:var(--acc);min-width:8px}
 #qcard .ql{display:flex;gap:18px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
@@ -1782,15 +1783,16 @@ $('#gdspb').onclick=gdSpace;
 /* ===== 側邊欄：雲端空間（Google 帳號用量） ===== */
 const QK='oc_gd_quota';
 const fmtQ=n=>{n=+n||0;const g=n/1073741824;if(g>=1024)return Number((g/1024).toFixed(2))+' TB';if(g>=1)return (g<10?g.toFixed(2):Number(g.toFixed(1)))+' GB';return Math.max(0,Math.round(n/1048576))+' MB'};
+const RBCLOUD='<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="rbg" x1="3" y1="20" x2="21" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4285f4"/><stop offset=".5" stop-color="#9b72cb"/><stop offset="1" stop-color="#d96570"/></linearGradient></defs><path fill="url(#rbg)" d="M7.5 19a5.5 5.5 0 0 1-.9-10.92A6.5 6.5 0 0 1 19.2 9.6 4.7 4.7 0 0 1 18.5 19z"/></svg>';
 function drawQuota(note){
   const el=$('#qcard');if(!el)return;
   let q=null;try{q=JSON.parse(localStorage.getItem(QK)||'null')}catch(e){}
   const bt='<div class="ql"><button id="qref">更新</button></div>';
-  if(!q){el.innerHTML='<div class="qt">☁ 雲端空間</div><div class="mut">'+esc(note||'登入 Google 並同步後，這裡會顯示空間用量。按「更新」可立即查詢。')+'</div>'+bt;return}
+  if(!q){el.innerHTML='<div class="qt">'+RBCLOUD+'雲端空間</div><div class="mut">'+esc(note||'登入 Google 並同步後，這裡會顯示空間用量。按「更新」可立即查詢。')+'</div>'+bt;return}
   const has=q.l>0,pct=has?Math.min(100,q.u/q.l*100):0;
-  el.innerHTML='<div class="qt">☁ 已使用 '+(has?Math.round(pct)+'% (共 '+fmtQ(q.l)+')':fmtQ(q.u)+'（無上限）')+'</div>'
+  el.innerHTML='<div class="qt">'+RBCLOUD+'雲端空間</div>'
     +(has?'<div class="qb"><div class="qf" style="width:'+Math.max(pct,1).toFixed(1)+'%"></div></div>':'')
-    +'<div class="mut">已使用 '+fmtQ(q.u)+(has?' (共 '+fmtQ(q.l)+')':'')+'</div>'
+    +'<div class="mut">已使用 '+fmtQ(q.u)+(has?'（'+Math.round(pct)+'%，共 '+fmtQ(q.l)+'）':'（無上限）')+'</div>'
     +'<div class="mut" style="margin-top:6px">'+esc(q.e||'')+'</div><div class="mut">更新時間：'+esc(new Date(q.t).toLocaleString('zh-TW',{hour12:false}))+'</div>'+(note?'<div class="mut"><span class="err">'+esc(note)+'</span></div>':'')+bt;
 }
 async function loadQuota(inter){
