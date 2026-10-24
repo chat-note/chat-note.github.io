@@ -1113,8 +1113,9 @@ async function shareOut(title,text,files){
   return false;
 }
 function shareNotes(ids){
-  const all=notes(),a=ids.map(id=>all.find(n=>n.id===id)).filter(Boolean);
+  const all=notes(),a=ids.map(id=>all.find(n=>n.id===id)).filter(Boolean).map(vw);
   if(!a.length)return;
+  if(a.some(n=>n._l)){alert('請先開啟加密筆記再分享');return}
   const t=a.map(n=>'《'+tex(n.title)+'》'+((n.kws||[]).length?'\n'+n.kws.map(w=>'#'+tex(w)).join(' '):'')+(n.body?'\n\n'+tex(n.body):'')).join('\n\n————————\n\n');
   shareOut(a.length===1?tex(a[0].title):'Chatnote 筆記',t);
 }
@@ -1127,6 +1128,21 @@ const TT={n:'筆記本',e:'AI 摘要'};
 });
 const GRIP='<span class="dh" aria-label="拖曳排序" title="按住上下拖曳排序"><svg viewBox="0 0 12 18" width="12" height="18" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="3" cy="15" r="1.5"/><circle cx="9" cy="15" r="1.5"/></g></svg></span>';
 const DK={};
+const UNL={};
+const vw=n=>{if(!n||!n.enc)return n;const u=UNL[n.id];return u?{...n,title:u.t,body:u.b,kws:u.k,_u:1}:{...n,_l:1}};
+function askPw(title,again){return new Promise(res=>{
+  openMdl('<h3>'+esc(title)+'</h3><input id="pw1" type="password" autocomplete="off" placeholder="密碼">'+(again?'<input id="pw2" type="password" autocomplete="off" placeholder="再輸入一次密碼" style="margin-top:8px">':'')+'<p class="err" id="pwm" style="margin:8px 0 0"></p><div class="row" style="margin-top:12px"><button class="b" id="pwok">確認</button><button class="b g" id="mcx">取消</button></div>');
+  const go=()=>{const v=$('#pw1').value;if(!v){$('#pwm').textContent='請輸入密碼';return}if(again&&v!==$('#pw2').value){$('#pwm').textContent='兩次輸入不一致';return}closeMdl();res(v)};
+  $('#pwok').onclick=go;
+  document.querySelectorAll('#pw1,#pw2').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')go()}));
+  $('#pw1').focus();
+})}
+async function unlockNote(id){
+  const n=notes().find(x=>x.id===id);if(!n||!n.enc)return false;
+  const pw=await askPw('輸入這則筆記的密碼');if(!pw)return false;
+  try{const o=await dec(n.enc,pw);UNL[id]={t:o.t||'',b:o.b||'',k:o.k||[],pw};return true}
+  catch(e){alert('密碼錯誤');return false}
+}
 function draw(k){
   const q=$('#s'+k).value.trim().replace(/^#/,'').toLowerCase();
   let fid=V[k];
@@ -1135,9 +1151,9 @@ function draw(k){
   const dgF=!fid&&!q,dgN=!!fid&&!q;
   const fn=id=>(F.find(x=>x.id===id)||{name:'?'}).name;
   const qs=q.split(/[\s,，、#]+/).filter(Boolean);
-  const hit=n=>{const h=(tex(n.title)+' '+tex(n.body)+' '+(n.kws||[]).join(' ')+' '+fn(n.fid)).toLowerCase();return qs.every(w=>h.includes(w))};
+  const hit=n=>{n=vw(n);const h=(tex(n.title)+' '+tex(n.body)+' '+(n.kws||[]).join(' ')+' '+fn(n.fid)).toLowerCase();return qs.every(w=>h.includes(w))};
   const fc=f=>'<div class="it selitem" data-f="'+f.id+'"'+(dgF?' style="display:flex;align-items:center;gap:6px"':'')+'>'+(dgF?GRIP:'')+'<div data-a="of" data-i="'+f.id+'" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px'+(dgF?';flex:1;min-width:0':'')+'"><span><b class="tt">📁 '+esc(f.name)+'</b><br><span class="mut">'+N.filter(n=>n.fid===f.id).length+' 則</span></span><span>›</span></div></div>';
-  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px">'+(dgN?GRIP:'')+'<div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div class="nbd" style="white-space:pre-wrap;margin:8px 0">'+linkify(esc(tex(n.body)))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button><button data-a="shn" data-i="'+n.id+'">分享</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
+  const list=(a,sf)=>a.length?a.map(n=>vw(n)).map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px">'+(dgN?GRIP:'')+'<div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div>'+(n._l?'<div class="act"><button data-a="unl" data-i="'+n.id+'">🔓 輸入密碼開啟</button></div>':'')+'<details'+(n._l?' class="hide"':'')+'><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div class="nbd" style="white-space:pre-wrap;margin:8px 0">'+linkify(esc(tex(n.body)))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button><button data-a="shn" data-i="'+n.id+'">分享</button>'+(n._u?'<button data-a="lk" data-i="'+n.id+'">🔒 鎖上</button>':'')+'</div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
   const bar='';
   let h,d;
   if(fid){
@@ -1219,20 +1235,22 @@ function nbar(k){
   const p=$('#p-'+k),b=$('#nb'+k),sp=$('#nsp'+k);if(!b)return;
   const cf=p.querySelectorAll('.selitem.sel[data-f]').length,cn=p.querySelectorAll('.selitem.sel[data-c]').length,n=cf+cn,tot=p.querySelectorAll('.selitem').length;
   if(!n){b.classList.add('hide');b.innerHTML='';sp.style.height='0';return}
+  const _se=p.querySelector('.selitem.sel[data-c]'),_sn=_se?notes().find(x=>x.id===_se.dataset.c):null;
   const B=(a,t,x)=>'<button class="b g sm" data-a="'+a+'"'+(x||'')+'>'+t+'</button>';
   b.innerHTML='<div class="dk"><div class="row" style="margin:0"><span class="mut" style="width:100%">已選取 '+(cf?cf+' 個資料夾':'')+(cf&&cn?'、':'')+(cn?cn+' 則筆記':'')+'</span>'
     +(n<tot?B('sa','全選'):'')+B('sc','取消選取')
     +(((cn&&!cf&&V[k])||(cf&&!cn&&!V[k]))&&!$('#s'+k).value.trim()?B('mu','↑ 上移')+B('md','↓ 下移'):'')
-    +(n===1?B('rn',cn?'編輯標題':'改名'):'')+(n===1&&cn===1?B('eb','編輯內容'):'')
+    +(n===1?B('rn',cn?'編輯標題':'改名'):'')+(n===1&&cn===1?B('eb','編輯內容')+B('enc',_sn&&_sn.enc?'解除加密':'加密'):'')
     +(cn&&!cf?B('shs','分享'):'')+(cn&&!cf?B('ai',k==='n'?(cn===1?'AI摘要':'AI整併摘要'):'AI 整併'):'')
     +B('dl','刪除',' style="color:var(--warn);border-color:var(--warn)"')+'</div></div>';
   b.classList.remove('hide');sp.style.height=(b.offsetHeight+10)+'px';
 }
 const edFiles=()=>ED.files.length?ED.files.map((f,i)=>'<span class="tag" style="margin:0 6px 6px 0">📎 '+esc(f.name.slice(0,26))+' · '+Math.max(1,Math.round(f.size/1024))+' KB <b data-a="rf" data-i="'+i+'" style="cursor:pointer;padding:0 4px">✕</b></span>').join(''):'<span class="mut">沒有附加檔案</span>';
 function openEd(k,id){
+  if(id){const n0=notes().find(x=>x.id===id);if(n0&&n0.enc&&!UNL[id]){unlockNote(id).then(ok=>{if(ok)openEd(k,id)});return}}
   if(ED){const ok=ED.k;ED=null;$('#ed'+ok).innerHTML='';draw(ok)}
-  const n=id?notes().find(x=>x.id===id):null;
-  ED={k,id:id||'',files:n?(n.files||[]).slice():[]};
+  const n=id?vw(notes().find(x=>x.id===id)):null;
+  ED={k,id:id||'',files:n?(n.files||[]).slice():[],pw:(n&&n._u&&UNL[id])?UNL[id].pw:null};
   const html='<div class="card" id="edbox'+k+'"><h3>'+(n?'編輯筆記':'新增筆記')+'</h3><input name="t" placeholder="標題" value="'+esc(n?n.title:'')+'"><input name="k" placeholder="關鍵字（用空格或逗號分隔）" style="margin-top:8px" value="'+esc(n?(n.kws||[]).join(' '):'')+'"><textarea name="b" rows="8" placeholder="內容" style="margin-top:8px">'+esc(n?n.body:'')+'</textarea><div style="margin-top:8px"><div id="edf'+k+'">'+edFiles()+'</div><label class="b g sm" style="margin-top:6px">＋附加檔案（任何類型）<input id="edup'+k+'" type="file" multiple hidden></label></div><p style="margin:8px 0 0">資料夾：<select name="f">'+folderOpts(k,n?n.fid:(V[k]||last()[k]))+'</select></p><div class="row" style="margin-top:12px"><button class="b" data-a="es">儲存</button><button class="b g" data-a="eai">✨ AI 標題/關鍵字</button><button class="b g" data-a="ec">取消</button></div></div>';
   const el=n?document.querySelector('#d'+k+' [data-c="'+id+'"]'):null;
   if(el){el.outerHTML=html;addX($('#edbox'+k));nbar(k);return}
@@ -1242,6 +1260,7 @@ function openEd(k,id){
 async function aiMerge(k){
   const ids=[...document.querySelectorAll('#p-'+k+' .sel[data-c]')].map(c=>c.dataset.c);
   const sel=notes().filter(n=>ids.includes(n.id));
+  if(sel.some(n=>n.enc)){alert('加密筆記不能交給 AI 整理，請先解除加密');return}
   if(sel.length<(k==='e'?2:1)){alert(k==='e'?'請先長按選取至少 2 則AI 摘要':'請先長按選取要整理的筆記');return}
   $('#ap'+k).innerHTML='<p class="mut">'+(sel.length===1?'AI 摘要中…':'AI 整併摘要中…')+'</p>';
   try{
@@ -1258,7 +1277,7 @@ async function aiMerge(k){
   }catch(e){$('#ap'+k).innerHTML='<p>'+errH(e)+'</p>'}
 }
 function openPick(k){
-  const cs=chats(),F=folds(),N=notes(),TN={n:'筆記本',e:'AI 摘要'};
+  const cs=chats(),F=folds(),N=notes().filter(n=>!n.enc),TN={n:'筆記本',e:'AI 摘要'};
   const grp=(ttl,inner)=>'<details style="margin:4px 0"><summary style="display:flex;gap:8px;align-items:center;list-style:none"><input type="checkbox" data-pg="1" style="width:22px;flex:none"><span>'+ttl+'</span></summary><div style="margin-left:6px">'+inner+'</div></details>';
   const row=(attr,t)=>'<label style="display:flex;gap:10px;align-items:flex-start;margin:6px 0"><input type="checkbox" '+attr+' style="width:22px;flex:none;margin-top:4px"><span>'+t+'</span></label>';
   const chHtml=cs.length?cs.map(c=>{
@@ -1342,7 +1361,7 @@ async function galDl(btn){
 document.addEventListener('keydown',e=>{if(!$('#gwrap'))return;if(e.key==='ArrowLeft')galGo(-1);else if(e.key==='ArrowRight')galGo(1)});
 async function zoomF(nid,j){const n=notes().find(x=>x.id===nid);if(!n)return;const i=galOf(n).findIndex(g=>g.k==='f'&&g.j===+j);if(i>=0)showGal(nid,i)}
 async function zoomImg(nid){showGal(nid,0)}
-['n','e'].forEach(k=>$('#p-'+k).onclick=e=>{
+['n','e'].forEach(k=>$('#p-'+k).onclick=async e=>{
   const t=e.target.closest('[data-a]');if(!t)return;
   const a=t.dataset.a,i=t.dataset.i,s=$('#s'+k);
   if(['of','up','tag','gs'].includes(a)){ED=null;$('#ed'+k).innerHTML=''}
@@ -1354,7 +1373,7 @@ async function zoomImg(nid){showGal(nid,0)}
     const cf=[...document.querySelectorAll('#p-'+k+' .sel[data-f]')].map(c=>c.dataset.f),cn=[...document.querySelectorAll('#p-'+k+' .sel[data-c]')].map(c=>c.dataset.c);
     if(cf.length+cn.length!==1){alert('請先選取 1 個項目再改名（目前選取 '+(cf.length+cn.length)+' 個）');return}
     if(cf.length){const f=folds().find(x=>x.id===cf[0]),n=(prompt('資料夾新名稱',f.name)||'').trim();if(n){sv('oc_fold',folds().map(x=>x.id===f.id?{...x,name:n}:x));draw(k)}}
-    else{const o=notes().find(x=>x.id===cn[0]),n=(prompt('筆記新標題',tex(o.title))||'').trim();if(n){sv('oc_notes',notes().map(x=>x.id===o.id?{...x,title:n}:x));draw(k)}}
+    else{const o=notes().find(x=>x.id===cn[0]);if(o.enc){alert('加密筆記請先開啟，再用「編輯內容」修改標題');return}const n=(prompt('筆記新標題',tex(o.title))||'').trim();if(n){sv('oc_notes',notes().map(x=>x.id===o.id?{...x,title:n}:x));draw(k)}}
   }
   else if(a==='dl'){
     const cf=[...document.querySelectorAll('#p-'+k+' .sel[data-f]')].map(c=>c.dataset.f),cn=[...document.querySelectorAll('#p-'+k+' .sel[data-c]')].map(c=>c.dataset.c);
@@ -1368,6 +1387,25 @@ async function zoomImg(nid){showGal(nid,0)}
     }
   }
   else if(a==='zoom')zoomImg(i);
+  else if(a==='unl'){unlockNote(i).then(ok=>{if(!ok)return;draw(k);const el=document.querySelector('#d'+k+' [data-c="'+i+'"] details');if(el)el.open=true})}
+  else if(a==='lk'){delete UNL[i];draw(k)}
+  else if(a==='enc'){
+    const c=document.querySelector('#p-'+k+' .selitem.sel[data-c]');if(!c)return;
+    const n=notes().find(x=>x.id===c.dataset.c);if(!n)return;
+    if(ED&&ED.id===n.id){alert('請先儲存或取消編輯');return}
+    if(n.enc){
+      if(!UNL[n.id]&&!await unlockNote(n.id))return;
+      const u=UNL[n.id];if(!u)return;
+      if(!confirm('解除加密後，這則筆記會以明文存放。確定嗎？'))return;
+      sv('oc_notes',notes().map(x=>{if(x.id!==n.id)return x;const y={...x,title:u.t,body:u.b,kws:u.k,et:Date.now()};delete y.enc;return y}));
+      delete UNL[n.id];draw(k);
+    }else{
+      const pw=await askPw('設定這則筆記的密碼（忘記就無法復原）',true);if(!pw)return;
+      const e2=await enc({t:n.title,b:n.body,k:n.kws||[]},pw);
+      sv('oc_notes',notes().map(x=>x.id===n.id?{...x,title:'🔒 加密筆記',body:'',kws:[],enc:e2,et:Date.now()}:x));
+      delete UNL[n.id];draw(k);
+    }
+  }
   else if(a==='zoomf')zoomF(i,t.dataset.j);
   else if(a==='shn')shareNote(i);
   else if(a==='shs')shareNotes([...document.querySelectorAll('#p-'+k+' .sel[data-c]')].map(c=>c.dataset.c));
@@ -1387,8 +1425,9 @@ async function zoomImg(nid){showGal(nid,0)}
     if(!title){alert('請輸入標題');return}
     const fid=pickFolder(k,g('f'));if(!fid)return;
     const rec={title,body:g('b'),kws:clean(g('k').split(/[\s,，、#]+/)),fid,files:ED.files};
+    if(ED.pw){const u={t:title,b:rec.body,k:rec.kws};rec.enc=await enc(u,ED.pw);UNL[ED.id]={...u,pw:ED.pw};rec.title='🔒 加密筆記';rec.body='';rec.kws=[]}
     let arr=notes();
-    if(ED.id)arr=arr.map(x=>x.id===ED.id?{...x,...rec,...(JSON.stringify([x.title,x.body,x.kws,x.fid,x.files||[]])!==JSON.stringify([rec.title,rec.body,rec.kws,rec.fid,rec.files||[]])?{et:Date.now()}:{})}:x);else arr.unshift({id:uid(),k,img:null,date:new Date().toLocaleString('zh-TW'),...rec});
+    if(ED.id)arr=arr.map(x=>x.id===ED.id?{...x,...rec,...(JSON.stringify([x.title,x.body,x.kws,x.fid,x.files||[],x.enc||''])!==JSON.stringify([rec.title,rec.body,rec.kws,rec.fid,rec.files||[],rec.enc||''])?{et:Date.now()}:{})}:x);else arr.unshift({id:uid(),k,img:null,date:new Date().toLocaleString('zh-TW'),...rec});
     const isNew=!ED.id;sv('oc_notes',arr);rememberF(k,fid);if(isNew){V[k]=fid;s.value=''}ED=null;$('#ed'+k).innerHTML='';gcAll();draw(k);
   }
   else if(a==='aok'&&AP){
@@ -1425,7 +1464,7 @@ let FD=null;
 const grams=s=>{s=tex(s).toLowerCase();const o=new Set();(s.match(/[a-z0-9]+/g)||[]).forEach(w=>{if(w.length>1)o.add(w)});const c=s.replace(/[^\u4e00-\u9fff]/g,'');for(let i=0;i<c.length-1;i++)o.add(c.slice(i,i+2));return o};
 function related(q,k,n){
   const g=grams(q);
-  return notes().filter(x=>x.k===k).map(x=>{const t=grams(x.title+' '+(x.kws||[]).join(' ')),b=grams(x.body);let s=0;g.forEach(w=>{if(t.has(w))s+=3;else if(b.has(w))s+=1});return{x,s}}).filter(r=>r.s>0).sort((a,b)=>b.s-a.s).slice(0,n).map(r=>r.x);
+  return notes().filter(x=>x.k===k&&!x.enc).map(x=>{const t=grams(x.title+' '+(x.kws||[]).join(' ')),b=grams(x.body);let s=0;g.forEach(w=>{if(t.has(w))s+=3;else if(b.has(w))s+=1});return{x,s}}).filter(r=>r.s>0).sort((a,b)=>b.s-a.s).slice(0,n).map(r=>r.x);
 }
 async function findFlow(ix0){
   if(S.busy)return;
@@ -1436,7 +1475,7 @@ async function findFlow(ix0){
   if(!q.trim()&&!kws.length){$('#status').textContent='先選取訊息、輸入文字，或先聊一下再檢索。';return}
   busy(true,'AI 依關鍵字檢索筆記本中…');
   try{
-    const all=notes().filter(x=>x.k==='n');
+    const all=notes().filter(x=>x.k==='n'&&!x.enc);
     if(!all.length){busy(false,'筆記本裡還沒有筆記。');return}
     const ks=kws.map(w=>tex(w).toLowerCase());
     const sc=x=>{const nk=(x.kws||[]).map(w=>tex(w).toLowerCase()),t=tex(x.title).toLowerCase(),b=tex(x.body).toLowerCase();let v=0;ks.forEach(w=>{if(nk.some(u=>u===w))v+=5;else if(w.length>=2&&nk.some(u=>u.length>=2&&(u.includes(w)||w.includes(u))))v+=3;if(w.length>=2&&t.includes(w))v+=3;else if(w.length>=2&&b.includes(w))v+=1});return v};
@@ -1536,7 +1575,7 @@ async function openFile(id){
   PG.end('已儲存 '+out.length+' 個檔案'+(bad?'，'+bad+' 個失敗':''),bad&&!out.length);
 }));
 function ankiOut(ids){
-  const a=notes().filter(n=>ids.includes(n.id)&&(n.body||!n.file));
+  const a=notes().filter(n=>ids.includes(n.id)&&!n.enc&&(n.body||!n.file));
   if(!a.length){alert('請至少勾選一則可匯出的筆記');return}
   const F=folds(),h=s=>esc(tex(s)).replace(/\n/g,'<br>'),q=s=>'"'+s.replace(/"/g,'""')+'"';
   const rows=a.map(n=>[h(n.title),h(n.body),(n.kws||[]).map(w=>tex(w).replace(/\s+/g,'_')).join(' '),((F.find(f=>f.id===n.fid)||{}).name||'未分類').replace(/"/g,'')].map(q).join(','));
@@ -1547,7 +1586,7 @@ function ankiOut(ids){
 }
 function exCnt(){$('#excnt').textContent='已選 '+document.querySelectorAll('#exlist input[value]:checked').length+' 則'}
 function exFill(){
-  const k=$('#exk').value,F=folds().filter(f=>f.k===k),N=notes().filter(n=>n.k===k&&(n.body||!n.file));
+  const k=$('#exk').value,F=folds().filter(f=>f.k===k),N=notes().filter(n=>n.k===k&&!n.enc&&(n.body||!n.file));
   const keep=new Set([...document.querySelectorAll('#exlist input[value]:checked')].map(c=>c.value));
   const grp=F.map(f=>({n:f.name,a:N.filter(n=>n.fid===f.id)}));
   grp.push({n:'未分類',a:N.filter(n=>!F.some(f=>f.id===n.fid))});
