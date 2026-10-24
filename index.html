@@ -144,21 +144,32 @@ nav{display:none}
 #mnu>button.on{background:var(--selbg);color:var(--selt)}
 #dock{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 body.kbo #dock{padding-bottom:8px}
+#lgw{flex:none;margin-left:auto;display:flex;flex-direction:column;align-items:center;line-height:1}
+#top #lgw b#lgo{margin-left:0}
+#ver{font-size:11px;color:var(--mut);margin-top:3px;white-space:nowrap}
+.msg .tm{display:none;font-size:12px;color:var(--mut);margin-top:6px}
+.msg.sel .tm{display:block}
+#qcard{margin:12px 0 0;border-radius:18px;padding:14px 16px}
+#qcard .qt{font-size:16px;font-weight:600;margin:0 0 8px}
+#qcard .qb{height:8px;border-radius:99px;background:var(--bd);overflow:hidden;margin:0 0 8px}
+#qcard .qf{height:100%;border-radius:99px;background:var(--acc);min-width:8px}
+#qcard .ql{display:flex;gap:18px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+#qcard .ql a,#qcard .ql button{color:var(--acc);font-weight:600;font-size:14px;text-decoration:none;background:none;border:0;padding:4px 0;cursor:pointer}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver">v2026.10.24-b</small></span></header>
 <section id="p-learn">
- <div class="mut gdst" style="margin:0 0 6px"></div>
+ <div class="mut gdt" style="margin:0 0 6px"></div>
  <div id="chat"></div>
  <div class="mut" id="status" style="margin:0 0 8px"></div>
 </section>
 <section id="p-n" class="hide"></section>
 <section id="p-e" class="hide"></section>
 <section id="p-set" class="hide">
- <div class="mut" style="font-size:12px;margin:0 0 6px">v2026.10.24-a</div>
+ 
  <div id="s-home">
   <div class="card"><button class="b" id="glogin" style="width:100%">Google 登入</button><div class="mut" id="gdcur" style="margin-top:8px;word-break:break-all"></div></div>
   <details class="card"><summary>帳號管理</summary>
@@ -166,6 +177,7 @@ body.kbo #dock{padding-bottom:8px}
         <div class="mut" style="margin:14px 0 4px">所有帳號互通：第一個同步的帳號是主帳，筆記只存主帳的 Drive，其他帳號都能編輯，沒有誰的資料優先（逐則比最後修改時間）。帳號名單會隨筆記同步，在任何一個帳號新增或移除，其他帳號下次同步就會跟上。主帳滿了時，新圖片可改存到其他帳號。</div>
     <select id="gddest"><option value="a"></option></select>
     <div class="row" style="margin-top:8px;flex-wrap:nowrap;align-items:stretch;gap:6px"><button class="b g q4" id="gdblogin">新增帳號</button><button class="b g q4" id="gdbclr">移除帳號</button><button class="b g q4" id="gbk">另存備份</button><label class="b g q4">匯入備份<input id="gimp" type="file" accept=".json,application/json" hidden></label></div>
+    <button class="b g" id="gdmove" style="width:100%;margin-top:8px">移動帳號（搬到另一個 Google 帳號）</button>
     <div class="mut" id="gdbst" style="margin-top:8px"></div>
     <p class="mut" style="margin:8px 0 0">兩個帳號都可以編輯；同一則筆記兩邊都改過時，留下較新的。「匯入備份」仍會覆蓋這台裝置的資料。</p>
    </div>
@@ -224,7 +236,7 @@ body.kbo #dock{padding-bottom:8px}
 </main>
 <div id="mdl" class="hide"><div class="mbox" id="mbox"></div></div>
 <div id="bot"><div id="dock"><div class="dk">
- <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selclr">取消選取</button><button class="b g sm" id="snipclr">取消選取</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
+ <div class="row hide" id="selbar" style="margin:0 0 8px"><span id="selcnt" class="mut"></span><button class="b g sm" id="selall">全選</button><button class="b g sm" id="selclr">取消選取</button><button class="b g sm" id="snipclr">取消選取</button><button class="b g sm" id="selcp">複製</button><button class="b g sm" id="selsh">分享</button><button class="b g sm" id="selps">貼上</button><button class="b g sm" id="selfind">檢索筆記本</button><button class="b g sm" id="sum">存筆記</button><button class="b g sm" id="aib">AI筆記</button></div>
  <div id="qbox" class="hide"><div class="qtx" id="qtx"></div><button id="qx" aria-label="取消引用">✕</button></div>
  <div id="attbox" class="row hide" style="margin:0 0 6px"></div>
  <div class="row" style="flex-wrap:nowrap;margin:0;align-items:flex-end;gap:6px"><label class="plus" aria-label="上傳附件">+<input id="attf" type="file" multiple accept="image/*,.pdf,.txt,.md,.csv,.json,.html,.xml,.log,.js,.py,.css,.ts,.yml,.yaml,text/*" hidden></label><span class="xw" style="flex:1;min-width:0;display:block"><textarea id="q" rows="1" placeholder="輸入訊息…"></textarea><button type="button" class="xb" aria-label="清除全部">✕</button></span><button class="b" id="send" style="flex:none">拍照</button><input id="cam" type="file" accept="image/*" capture="environment" hidden></div>
@@ -244,9 +256,11 @@ body.kbo #dock{padding-bottom:8px}
      <span id="thinkwrap" class="row" style="gap:6px;flex-wrap:nowrap"><span class="mut">思考</span><select id="think" style="width:auto"><option value="">預設</option><option value="low">低</option><option value="medium">中</option><option value="high">高</option></select></span>
     </div>
     <div class="row"><span class="mut">用途</span><select id="mode" style="flex:1;min-width:0"><option value="q">題目討論（任何科目）</option><option value="o">優惠整理（QR、海報、截圖）</option></select></div>
+    <div class="row" id="gswrap" style="margin-top:10px"><span class="mut">Google 搜尋</span><select id="gsearch" style="flex:1;min-width:0"><option value="1">開（可查最新資料）</option><option value="0">關</option></select></div>
    </div>
   </div>
   </details>
+  <div class="card" id="qcard"></div>
 </aside>
 <div id="pg" class="hide" role="status" aria-live="polite"><div class="t"><span id="pgl"></span><b id="pgr"></b></div><div class="tr"><div id="pgf" class="fl"></div></div></div>
 <div id="sbar"><div id="sth"></div></div><div id="jmp"><button id="jt" aria-label="到最上面">▲</button><button id="jb" aria-label="到最下面">▼</button></div>
@@ -399,6 +413,7 @@ async function gen(contents,system,o){
     if(th)tc.thinkingLevel=th;
     if(Object.keys(tc).length)gc.thinkingConfig=tc;
     if(Object.keys(gc).length)body.generationConfig=gc;
+    if(!o.json&&ls.get('oc_gsearch','1')==='1'){body.tools=[{google_search:{}}];body.systemInstruction.parts[0].text=system+'\n今天日期：'+new Date().toLocaleDateString('zh-TW')+'。如果問題需要最新資料（新聞、價格、版本、近期事件），請使用 Google 搜尋並以搜尋結果為準；一般知識或題目解析不需要搜尋。'}
   }else if(p==='claude'){
     url='https://api.anthropic.com/v1/messages';
     headers['x-api-key']=c.key;headers['anthropic-version']='2023-06-01';headers['anthropic-dangerous-direct-browser-access']='true';
@@ -433,7 +448,7 @@ async function gen(contents,system,o){
       if(r.status===404)throw new Error('找不到這個模型或網址，請檢查模型名稱。\n原始訊息：'+msg);
       if(r.status===429)throw new Error('額度用完或請求太頻繁（429）。請稍後再試，或換一個模型。');
       if(r.status===503||r.status===529||/overload|high demand|unavailable/i.test(msg))throw new Error('這個模型現在使用人數太多，請稍等幾分鐘重試或換一個模型。\n原始訊息：'+msg);
-      throw new Error(msg+(p==='gemini'&&/think/i.test(msg)?'\n（可能與思考設定有關，請把思考改成「預設」）':''));
+      throw new Error(msg+(p==='gemini'&&/think/i.test(msg)?'\n（可能與思考設定有關，請把思考改成「預設」）':'')+(p==='gemini'&&/search|ground|tool/i.test(msg)?'\n（可能與 Google 搜尋有關，請到左上角選單「模型設定」把「Google 搜尋」改成關）':''));
     }
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='',full='',thought='',serr='',why='';
     try{
@@ -476,14 +491,15 @@ const rememberF=(k,id)=>{const L=last();L[k]=id;sv('oc_last',L)};
 
 /* ===== 聊天頁 ===== */
 const mk=h=>{const m=metaOf(h);return m&&m.kws&&m.kws.length?'<div style="margin-top:6px">'+m.kws.map(w=>'<span class="tag kw" data-cp="'+esc(tex(w))+'">#'+esc(tex(w))+'</span>').join('')+'</div>':''};
+const fmtT=t=>new Date(t).toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
 function render(noScroll){
   $('#chat').innerHTML=S.hist.map((h,i)=>{
-    const t=txt(h),img=h.parts.find(isImg);
+    const t=txt(h),img=h.parts.find(isImg),tm=h.t?'<div class="tm">'+esc(fmtT(h.t))+'</div>':'';
     const lost=h.role==='user'&&h.parts.some(p=>p.text===PHT);
-    const ab=lost?'<div class="act"><button data-m="rl" data-i="'+i+'">重新讀取</button></div>':t?'<div class="act"><button data-m="cp" data-i="'+i+'">複製</button><button data-m="qt" data-i="'+i+'">引用</button>'+(h.role==='user'?'<button data-m="ed" data-i="'+i+'">編輯</button>':'<button data-m="fd" data-i="'+i+'">檢索筆記本</button>')+'<button data-m="sv" data-i="'+i+'">存成筆記</button><button data-m="ai" data-i="'+i+'">AI筆記</button><button data-m="rg" data-i="'+i+'">重整</button></div>':'';
+    const ab=lost?'<div class="act"><button data-m="rl" data-i="'+i+'">重新讀取</button></div>':t?'<div class="act"><button data-m="cp" data-i="'+i+'">複製</button><button data-m="sh" data-i="'+i+'">分享</button><button data-m="qt" data-i="'+i+'">引用</button>'+(h.role==='user'?'<button data-m="ed" data-i="'+i+'">編輯</button>':'<button data-m="fd" data-i="'+i+'">檢索筆記本</button>')+'<button data-m="sv" data-i="'+i+'">存成筆記</button><button data-m="ai" data-i="'+i+'">AI筆記</button><button data-m="rg" data-i="'+i+'">重整</button></div>':'';
     const cls=S.sel.has(i)?' sel':'';
-    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t)+'</span>'+ab+'</div>';
-    return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+esc(tex(t))+'</span>'+mk(h)+ab+'</div>';
+    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t)+'</span>'+tm+ab+'</div>';
+    return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+esc(tex(t))+'</span>'+mk(h)+tm+ab+'</div>';
   }).join('');
   markSel();
   if(!noScroll)window.scrollTo(0,document.body.scrollHeight);
@@ -493,9 +509,9 @@ async function ask(){
   const t0=Date.now();let th='';
   const tick=()=>{const sec=Math.round((Date.now()-t0)/1000);$('#status').innerHTML=esc(provName())+' 運作中… 已等待 '+sec+' 秒'+(th?'<br><span class="mut">'+esc(th.slice(-100).replace(/\s+/g,' '))+'</span>':'')};
   busy(true,'');tick();const iv=setInterval(tick,1000);
-  S.hist.push({role:'model',parts:[{text:''}]});const idx=S.hist.length-1;
+  S.hist.push({role:'model',t:Date.now(),parts:[{text:''}]});const idx=S.hist.length-1;
   try{
-    await gen(S.hist.slice(0,idx),S.mode==='o'?SYSO:SYS,{on:(t,h)=>{S.hist[idx].parts[0].text=t;th=h;render()}});
+    await gen(S.hist.slice(0,idx),S.mode==='o'?SYSO:SYS,{on:(t,h)=>{S.hist[idx].parts[0].text=t;th=h;render()}});S.hist[idx].t=Date.now();
     clearInterval(iv);busy(false,'');
   }catch(e){clearInterval(iv);S.hist.pop();S.sel.delete(idx);busy(false,(S.ctl&&S.ctl.signal.aborted)?'<span class="mut">已取消</span>':errH(e))}
   render();saveChat();
@@ -506,7 +522,7 @@ async function pick(f){
   const url=await shrink(f,1100,.75);S.thumb=await shrink(f,o?520:160,o?.6:.7);
   S.start=S.hist.length;S.pend=null;
   const tt0=$('#q').value.trim();$('#q').value='';autoH();const oid=uid();let hasO=false;try{hasO=await imgPut(oid,await shrink(f,2400,.88))}catch(e){}
-  S.hist.push({role:'user',...(hasO?{oid}:{}),parts:[{inline_data:{mime_type:'image/jpeg',data:url.split(',')[1]}},{text:tt0||(o?'請整理這張圖裡的優惠。':'請解析這張圖。')}]});
+  S.hist.push({role:'user',t:Date.now(),...(hasO?{oid}:{}),parts:[{inline_data:{mime_type:'image/jpeg',data:url.split(',')[1]}},{text:tt0||(o?'請整理這張圖裡的優惠。':'請解析這張圖。')}]});
   render();saveChat();ask();
 }
 $('#cam').onchange=e=>{const fs=[...e.target.files];e.target.value='';stage(fs)};
@@ -545,7 +561,7 @@ $('#send').onclick=async()=>{
   S.sending=true;
   try{
     const qt=S.qt?S.qt.split('\n').map(l=>'> '+l).join('\n')+'\n\n':'';
-    const at=S.att.slice(),m={role:'user',parts:[]};let tx=qt+t;
+    const at=S.att.slice(),m={role:'user',t:Date.now(),parts:[]};let tx=qt+t;
     const tt=at.filter(a=>a.text).map(a=>a.text).join('\n\n');if(tt)tx+=(tx?'\n\n':'')+tt;
     at.forEach(a=>{if(a.part)m.parts.push(a.part)});
     const im=at.find(a=>a.kind==='img');
@@ -692,6 +708,7 @@ S.clip='';
 const flash=(b,t)=>{const o=b.textContent;b.textContent=t;setTimeout(()=>{b.textContent=o},1200)};
 async function copyText(t){S.clip=t;try{await navigator.clipboard.writeText(t);return true}catch(e){try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(x){return false}}}
 $('#selcp').onclick=async e=>{const t=S.snip||bodyOf(selIdx());if(!t)return;flash(e.target,(await copyText(t))?'已複製':'複製失敗')};
+$('#selsh').onclick=()=>{const t=S.snip||bodyOf(selIdx());if(t)shareOut('Chatnote',t)};
 $('#selps').onclick=async()=>{let t='';try{t=await navigator.clipboard.readText()}catch(e){}if(!t)t=S.clip;if(!t)return;const q=$('#q'),a=q.selectionStart==null?q.value.length:q.selectionStart,b=q.selectionEnd==null?a:q.selectionEnd;q.value=q.value.slice(0,a)+t+q.value.slice(b);q.focus();q.selectionStart=q.selectionEnd=a+t.length;autoH();updSend()};
 chat.addEventListener('contextmenu',e=>{if(e.target.closest('.msg:not(.tx)'))e.preventDefault()});
 chat.addEventListener('click',e=>{
@@ -713,11 +730,12 @@ async function msgAct(a,i,b){
     setTimeout(()=>{b.textContent='複製'},1500);
   }
   else if(a==='qt')quote(i);
+  else if(a==='sh')shareOut('Chatnote',tex(txt(h)));
   else if(a==='rl'){
     if(typeof GDBUSY!=='undefined'&&GDBUSY){b.textContent='同步進行中，稍後再試';return}
     b.disabled=true;b.textContent='讀取中…';
     try{await gdAuth();const fid=await gdFolder();const L=await gdList(fid);await gdFetchImgs(L.m,{force:true});const n=await restoreImgs();if(!n){b.textContent='雲端找不到這張圖';b.disabled=false;setTimeout(()=>{if(b.isConnected)b.textContent='重新讀取'},2500)}}
-    catch(x){b.disabled=false;b.textContent='失敗，再按一次重試';gdmsg&&gdmsg('重新讀取失敗：'+gerr(x),1)}
+    catch(x){b.disabled=false;b.textContent='失敗，再按一次重試';topmsg('重新讀取失敗：'+gerr(x),1)}
   }
   else if(a==='sv')saveFlow([i]);
   else if(a==='ai')aiNote([i]);
@@ -822,7 +840,7 @@ $('#mdl').onclick=async e=>{
     if(S.busy)return;
     if(i<S.hist.length-1&&!confirm('重送會刪除這則之後的訊息，確定嗎？'))return;
     const h=S.hist[i],parts=h.parts.filter(p=>p.text===undefined).concat([{text:v}]);
-    closeMdl();S.hist=S.hist.slice(0,i);S.hist.push({...h,parts});
+    closeMdl();S.hist=S.hist.slice(0,i);S.hist.push({...h,parts,t:Date.now()});
     S.sel=new Set([...S.sel].filter(x=>x<i));S.start=Math.min(S.start,S.hist.length-1);
     render();saveChat();ask();return;
   }
@@ -866,10 +884,25 @@ $('#mdl').onchange=e=>{
   if(e.target.dataset.pg!==undefined){e.target.closest('details').querySelectorAll('input[data-pc],input[data-pn]').forEach(c=>c.checked=e.target.checked)}
 };
 
+/* ===== 分享（系統分享選單：LINE、信箱、其他 App） ===== */
+async function shareOut(title,text,files){
+  const d={};if(title)d.title=title;if(text)d.text=text;
+  if(files&&files.length){if(navigator.canShare&&navigator.canShare({files}))d.files=files;else if(!text){alert('這個瀏覽器不支援分享圖片');return false}}
+  if(navigator.share){try{await navigator.share(d);return true}catch(e){if(e&&e.name==='AbortError')return true}}
+  if(text){const ok=await copyText(text);topmsg(ok?'這個瀏覽器沒有分享選單，內容已複製':'分享失敗',!ok)}
+  return false;
+}
+function shareNotes(ids){
+  const all=notes(),a=ids.map(id=>all.find(n=>n.id===id)).filter(Boolean);
+  if(!a.length)return;
+  const t=a.map(n=>'《'+tex(n.title)+'》'+((n.kws||[]).length?'\n'+n.kws.map(w=>'#'+tex(w)).join(' '):'')+(n.body?'\n\n'+tex(n.body):'')).join('\n\n————————\n\n');
+  shareOut(a.length===1?tex(a[0].title):'Chatnote 筆記',t);
+}
+const shareNote=id=>shareNotes([id]);
 /* ===== 筆記本／AI 摘要（共用） ===== */
 const TT={n:'筆記本',e:'AI 摘要'};
 ['n','e'].forEach(k=>{
-  $('#p-'+k).innerHTML='<div class="row" style="margin-bottom:10px"><input id="s'+k+'" placeholder="搜尋標題、標籤、內容（可打 #關鍵字）" style="flex:1;min-width:0"></div><div class="mut gdst" style="margin:0 0 6px"></div><p class="mut" style="margin:0 0 8px">長按項目 1 秒可選取（選取後點一下可加選或取消），下方會跳出可用的操作。</p><div id="h'+k+'"></div><div id="ed'+k+'"></div><div id="ap'+k+'"></div><div id="d'+k+'"></div><div id="nsp'+k+'"></div><div id="nb'+k+'" class="nbar hide"></div>';
+  $('#p-'+k).innerHTML='<div class="row" style="margin-bottom:10px"><input id="s'+k+'" placeholder="搜尋標題、標籤、內容（可打 #關鍵字）" style="flex:1;min-width:0"></div><div class="mut gdt" style="margin:0 0 6px"></div><p class="mut" style="margin:0 0 8px">長按項目 1 秒可選取（選取後點一下可加選或取消），下方會跳出可用的操作。</p><div id="h'+k+'"></div><div id="ed'+k+'"></div><div id="ap'+k+'"></div><div id="d'+k+'"></div><div id="nsp'+k+'"></div><div id="nb'+k+'" class="nbar hide"></div>';
   $('#s'+k).oninput=()=>draw(k);
 });
 function draw(k){
@@ -881,7 +914,7 @@ function draw(k){
   const qs=q.split(/[\s,，、#]+/).filter(Boolean);
   const hit=n=>{const h=(tex(n.title)+' '+tex(n.body)+' '+(n.kws||[]).join(' ')+' '+fn(n.fid)).toLowerCase();return qs.every(w=>h.includes(w))};
   const fc=f=>'<div class="it selitem" data-f="'+f.id+'"><div data-a="of" data-i="'+f.id+'" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b class="tt">📁 '+esc(f.name)+'</b><br><span class="mut">'+N.filter(n=>n.fid===f.id).length+' 則</span></span><span>›</span></div></div>';
-  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px"><div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(n.body))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
+  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px"><div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(n.body))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button><button data-a="shn" data-i="'+n.id+'">分享</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
   const bar='';
   let h,d;
   if(fid){
@@ -905,7 +938,7 @@ function nbar(k){
   b.innerHTML='<div class="dk"><div class="row" style="margin:0"><span class="mut" style="width:100%">已選取 '+(cf?cf+' 個資料夾':'')+(cf&&cn?'、':'')+(cn?cn+' 則筆記':'')+'</span>'
     +(n<tot?B('sa','全選'):'')+B('sc','取消選取')
     +(n===1?B('rn',cn?'編輯標題':'改名'):'')+(n===1&&cn===1?B('eb','編輯內容'):'')
-    +(cn&&!cf?B('ai',k==='n'?(cn===1?'AI摘要':'AI整併摘要'):'AI 整併'):'')
+    +(cn&&!cf?B('shs','分享'):'')+(cn&&!cf?B('ai',k==='n'?(cn===1?'AI摘要':'AI整併摘要'):'AI 整併'):'')
     +B('dl','刪除',' style="color:var(--warn);border-color:var(--warn)"')+'</div></div>';
   b.classList.remove('hide');sp.style.height=(b.offsetHeight+10)+'px';
 }
@@ -991,7 +1024,7 @@ async function showGal(nid,idx){
     if(v)src=vsrc(v);else dl='<button class="b sm" onclick="galDl(this)">從 Drive 下載</button>';
   }
   const multi=G.length>1;
-  openMdl('<div class="row" style="margin-bottom:8px;flex-wrap:nowrap"><button class="b g sm" id="zt">放大</button><button class="b sm" id="mcx">關閉</button>'
+  openMdl('<div class="row" style="margin-bottom:8px;flex-wrap:nowrap"><button class="b g sm" id="zt">放大</button><button class="b g sm" onclick="galShare()">分享</button><button class="b sm" id="mcx">關閉</button>'
     +(multi?'<b style="margin-left:auto;white-space:nowrap">'+(idx+1)+'/'+G.length+'</b>':'')+'</div>'
     +'<div class="mut" style="margin:0 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>'+esc(lab)+'</span>'+dl+'</div>'
     +'<div id="gwrap" style="position:relative">'
@@ -1006,6 +1039,14 @@ async function showGal(nid,idx){
     if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&im&&im.style.width!=='250%')galGo(dx<0?1:-1)},{passive:true});
 }
 const galGo=d=>{if(GAL)showGal(GAL.nid,GAL.idx+d)};
+async function galShare(){
+  const n=GAL&&notes().find(x=>x.id===GAL.nid),g=n&&galOf(n)[GAL.idx];if(!g)return;
+  let v=await imgGet(g.k==='m'?n.iid:n.files[g.j].iid);
+  if(!v){alert('這張圖不在這台裝置上，請先下載');return}
+  if(typeof v==='string'){try{v=await (await fetch(v)).blob()}catch(e){alert('圖片讀取失敗');return}}
+  const nm=g.k==='m'?((tex(n.title).slice(0,20)||'image')+'.jpg'):n.files[g.j].name;
+  await shareOut(tex(n.title),'',[new File([v],nm,{type:v.type||'image/jpeg'})]);
+}
 async function galDl(btn){
   const n=GAL&&notes().find(x=>x.id===GAL.nid),g=n&&galOf(n)[GAL.idx];if(!g||g.k!=='f')return;
   btn.disabled=true;btn.textContent='下載中…';
@@ -1042,6 +1083,8 @@ async function zoomImg(nid){showGal(nid,0)}
   }
   else if(a==='zoom')zoomImg(i);
   else if(a==='zoomf')zoomF(i,t.dataset.j);
+  else if(a==='shn')shareNote(i);
+  else if(a==='shs')shareNotes([...document.querySelectorAll('#p-'+k+' .sel[data-c]')].map(c=>c.dataset.c));
   else if(a==='pk')openPick(k);
   else if(a==='nn')openEd(k,null);
   else if(a==='en')openEd(k,i);
@@ -1231,7 +1274,7 @@ $('#exall').onclick=()=>{document.querySelectorAll('#exlist input').forEach(c=>c
 $('#exclr').onclick=()=>{document.querySelectorAll('#exlist input').forEach(c=>c.checked=false);exCnt()};
 $('#exgo').onclick=()=>ankiOut([...document.querySelectorAll('#exlist input[value]:checked')].map(c=>c.value));
 /* ===== API 套用／管理 ===== */
-function cfgSum(){const c=cur();$('#cfgsum').textContent=(c?label(c)+' / '+(c.model||'未設定'):'尚未設定')+' / '+($('#mode').value==='o'?'優惠整理':'題目討論')}
+function cfgSum(){const c=cur();$('#cfgsum').textContent=(c?label(c)+' / '+(c.model||'未設定'):'尚未設定')+' / '+($('#mode').value==='o'?'優惠整理':'題目討論')+(c&&c.p==='gemini'&&ls.get('oc_gsearch','1')==='1'?' / 搜尋開':'')}
 function fillApis(){
   const a=apis(),c=cur();
   $('#api').innerHTML=a.length?a.map(x=>'<option value="'+x.id+'">'+esc(label(x))+'</option>').join(''):'<option value="">尚未新增 API（到設定新增）</option>';
@@ -1243,6 +1286,7 @@ function fillApis(){
   $('#msel').innerHTML=ml.map(x=>'<option value="'+esc(x)+'"'+(!custom&&x===cm?' selected':'')+'>'+esc(x)+'</option>').join('')+(cm&&!ml.includes(cm)&&!custom?'<option value="'+esc(cm)+'" selected>'+esc(cm)+'</option>':'')+'<option value="__c"'+(custom?' selected':'')+'>自訂模型名稱…</option>';
   $('#lmodel').classList.toggle('hide',!(noList||custom));
   $('#thinkwrap').classList.toggle('hide',!(c&&c.p==='gemini'));
+  $('#gswrap').classList.toggle('hide',!(c&&c.p==='gemini'));$('#gsearch').value=ls.get('oc_gsearch','1');
   $('#think').value=ls.get('oc_think','low');
   $('#uselist').innerHTML=a.length?a.map(x=>'<label style="display:flex;gap:10px;align-items:center;margin:8px 0"><input type="radio" name="useapi" value="'+x.id+'" style="width:22px;flex:none"'+(c&&c.id===x.id?' checked':'')+'><span><span class="tag" style="color:var(--acc);border-color:var(--acc)">'+esc(P[x.p].n)+'</span><b>'+esc(x.name||'未命名')+'</b><br><span class="mut">金鑰 …'+esc(x.key.slice(-4))+'｜模型 '+esc(x.model||'未設定')+'</span></span></label>').join(''):'<p class="mut">還沒有 API，請按下方「管理 API」新增。</p>';
   $('#managelist').innerHTML=a.length?a.map(x=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span><b>'+esc(P[x.p].n)+'</b>'+(x.name?' · '+esc(x.name):'')+' <span class="mut">…'+esc(x.key.slice(-4))+'</span></span><button class="b g" style="padding:6px 12px" data-rm="'+x.id+'">移除</button></div>').join(''):'<p class="mut">沒有可管理的 API。</p>';
@@ -1278,6 +1322,7 @@ $('#uselist').onchange=e=>{if(e.target.name==='useapi')setAct(e.target.value)};
 $('#lmodel').onchange=()=>{const a=apis(),c=cur();if(!c)return;a.find(y=>y.id===c.id).model=$('#lmodel').value.trim();saveApis(a);S.cm=false;fillApis()};
 $('#msel').onchange=()=>{const v=$('#msel').value;if(v==='__c'){S.cm=true;fillApis();$('#lmodel').focus();return}S.cm=false;const a=apis(),c=cur();if(!c)return;a.find(y=>y.id===c.id).model=v;saveApis(a);fillApis()};
 $('#think').onchange=()=>ls.set('oc_think',$('#think').value);
+$('#gsearch').onchange=()=>{ls.set('oc_gsearch',$('#gsearch').value);cfgSum()};
 $('#managelist').onclick=e=>{
   const id=e.target.dataset.rm;if(!id)return;
   const x=apis().find(y=>y.id===id);
@@ -1333,6 +1378,9 @@ function applyRemote(p){
 }
 const hasLocal=()=>apis().length||notes().length;
 const gmsg=(t,e)=>gdmsg(t,e);
+/* 上方簡短狀態：只顯示「同步中…」「幾點幾分 同步完成」，幾秒後自動消失；詳細訊息放在設定的兩個同步區塊 */
+let TOPT=0;
+const topmsg=(t,e,keep)=>{clearTimeout(TOPT);document.querySelectorAll('.gdt').forEach(el=>{el.innerHTML=t?(e?'<span class="err">'+esc(t)+'</span>':esc(t)):''});if(t&&!keep)TOPT=setTimeout(()=>topmsg(''),e?8000:3500)};
 const gerr=e=>e&&e.name==='OperationError'?'同步密碼錯誤，或雲端資料已損毀':e.message;
 
 /* ===== 備份檔（覆蓋前另存／手動另存／匯入） ===== */
@@ -1359,7 +1407,7 @@ $('#gimp').onchange=async e=>{
   }catch(x){gmsg('備份檔格式不正確',1)}
 };
 
-window.schedPush=()=>{if(window.schedDrive)window.schedDrive()};
+window.schedPush=()=>{if(window.updNeed)window.updNeed();if(window.schedDrive)window.schedDrive()};
 migrate();$('#nprov').onchange();fillApis();draw('n');draw('e');
 {const L0=chats()[0];if(L0)loadChat(L0.id,true);else drawHist()}
 gcAll();
@@ -1487,6 +1535,31 @@ async function gdSpace(){const el=$('#gdsp');try{el.textContent='讀取空間…
   el.innerHTML='帳號：'+esc((a.user||{}).emailAddress||'')+'<br>共用資料夾：'+fmtB(app)+'（'+cnt+' 個檔案）<br>Google 帳號總用量：'+fmtB(q.usage)+(q.limit?' / '+fmtB(q.limit)+'（剩 '+fmtB(q.limit-q.usage)+'）':'（無上限）');
 }catch(e){el.innerHTML='<span class="err">'+esc(gerr(e))+'</span>'}}
 $('#gdspb').onclick=gdSpace;
+/* ===== 側邊欄：雲端空間（Google 帳號用量） ===== */
+const QK='oc_gd_quota';
+const fmtQ=n=>{n=+n||0;const g=n/1073741824;if(g>=1024)return Number((g/1024).toFixed(2))+' TB';if(g>=1)return (g<10?g.toFixed(2):Number(g.toFixed(1)))+' GB';return Math.max(0,Math.round(n/1048576))+' MB'};
+function drawQuota(note){
+  const el=$('#qcard');if(!el)return;
+  let q=null;try{q=JSON.parse(localStorage.getItem(QK)||'null')}catch(e){}
+  const bt='<div class="ql"><a href="https://one.google.com/about/plans" target="_blank" rel="noopener">購買儲存空間</a><a href="https://one.google.com/storage/management" target="_blank" rel="noopener">清理儲存空間</a><button id="qref">更新</button></div>';
+  if(!q){el.innerHTML='<div class="qt">☁ 雲端空間</div><div class="mut">'+esc(note||'登入 Google 並同步後，這裡會顯示空間用量。按「更新」可立即查詢。')+'</div>'+bt;return}
+  const has=q.l>0,pct=has?Math.min(100,q.u/q.l*100):0;
+  el.innerHTML='<div class="qt">☁ 已使用 '+(has?Math.round(pct)+'% (共 '+fmtQ(q.l)+')':fmtQ(q.u)+'（無上限）')+'</div>'
+    +(has?'<div class="qb"><div class="qf" style="width:'+Math.max(pct,1).toFixed(1)+'%"></div></div>':'')
+    +'<div class="mut">已使用 '+fmtQ(q.u)+(has?' (共 '+fmtQ(q.l)+')':'')+'</div>'
+    +'<div class="mut" style="margin-top:4px">'+esc(q.e||'')+'・'+esc(new Date(q.t).toLocaleString('zh-TW',{hour12:false}))+(note?'<br><span class="err">'+esc(note)+'</span>':'')+'</div>'+bt;
+}
+async function loadQuota(inter){
+  if(!inter&&!(GD.tok&&Date.now()<GD.exp)){drawQuota();return}
+  const b=$('#qref');if(b){b.disabled=true;b.textContent='更新中…'}
+  try{
+    const a=await(await gdf(GAPI+'about?fields=storageQuota,user(emailAddress)')).json(),s=a.storageQuota||{};
+    localStorage.setItem(QK,JSON.stringify({u:+s.usage||0,l:+s.limit||0,e:((a.user||{}).emailAddress||''),t:Date.now()}));
+    drawQuota();
+  }catch(e){drawQuota(gerr(e))}
+}
+drawQuota();
+$('#qcard').onclick=e=>{if(e.target.closest('#qref'))loadQuota(true)};
 const ACCTS=()=>J('oc_gd_accts',[]),NAMES=()=>J('oc_gd_cnames',{}),LOC=()=>J('oc_gd_loc',{});
 /* ===== 帳號名單：每個帳號有「加入時間」，移除時留「移除時間」，兩邊合併時比時間，新的算數（沒有誰優先）===== */
 const AMT=()=>J('oc_gd_amt',{}),ADEL=()=>J('oc_gd_adel',{});
@@ -1570,6 +1643,55 @@ $('#gdbclr').onclick=async()=>{const v=$('#gddest').value;if(!v||v==='a'){$('#gd
   $('#gdbst').innerHTML='已移除 '+esc(v)+esc(sh)+'<br>'+showAccts()};
 $('#gdauto').checked=ls.get('oc_gd_auto','1')==='1';$('#gdauto').onchange=()=>{ls.set('oc_gd_auto',$('#gdauto').checked?'1':'0')};
 $('#gddest').onchange=()=>{ls.set('oc_gd_dest',$('#gddest').value)};
+/* ===== 移動帳號：①舊帳同步＋下載全部檔案＋檢查 ②登入新帳號＋上傳＋驗證（分兩步，因為登入視窗需要你當下按一次） ===== */
+let MVG=null;
+const mvmsg=(h,e)=>{$('#gdbst').innerHTML=e?'<span class="err">'+h+'</span>':h};
+$('#gdmove').onclick=async()=>{
+  if(SYNCALL||SYNCING||GDBUSY){mvmsg('同步進行中，稍後再試',1);return}
+  const A=ME();
+  if(!A){mvmsg('請先按上方「Google 登入」登入要搬出的帳號',1);return}
+  if(MAIN()&&MAIN()!==A){mvmsg('目前登入的是成員帳號，只有主帳號（'+esc(MAIN())+'）可以搬移。',1);return}
+  if(!confirm('搬移帳號分兩步：\n① 先把 '+A+' 的雲端資料同步，並把所有圖片與附件下載到這台裝置、檢查完整。\n② 再登入新帳號，把全部資料上傳過去並驗證。\n\n原帳號的雲端資料不會被刪除。\n第 ① 步可能要下載很多檔案，建議連 Wi-Fi。要開始嗎？'))return;
+  MVG=null;
+  try{
+    mvmsg('第 ① 步：同步 '+esc(A)+'…');
+    await gdAuth();
+    LASTSYNC=null;await syncAll(false);
+    if(!LASTSYNC||!LASTSYNC.ok)throw new Error('原帳號同步沒有完全成功，請看下方同步區塊的原因，成功後再搬移');
+    mvmsg('第 ① 步：下載雲端的圖片與附件…');
+    const fid=await gdFolder(),L=await gdList(fid);
+    await gdFetchImgs(L.m,{force:true});
+    const refs=imgRefs();let miss=0;
+    for(const x of refs){if(!await imgGet(x.iid))miss++}
+    MVG={A,total:refs.length,miss};
+    mvmsg('第 ① 步完成：共 '+refs.length+' 個圖片／附件'+(miss?'，其中 '+miss+' 個在雲端也找不到（本來就已遺失）':'，全部都在這台裝置上')+'。<br><button class="b" id="gdmove2" style="margin-top:8px">第 ② 步：登入新帳號並搬移</button>');
+  }catch(e){mvmsg(esc(gerr(e)),1)}
+};
+$('#gdbst').addEventListener('click',async e=>{
+  if(!e.target.closest('#gdmove2'))return;
+  if(!MVG||MVG.A!==ME()){mvmsg('請重新按「移動帳號」，從第 ① 步開始',1);return}
+  const A=MVG.A;let B='';
+  try{
+    GD.tok='';GD.force=true;
+    B=await whoTok(await gdAuth());
+    if(B===A){mvmsg('你選的還是原帳號 '+esc(A)+'，請再按一次「第 ② 步」，改選另一個帳號',1);return}
+    if(!confirm('要把全部資料搬到 '+B+' 嗎？\n（'+MVG.total+' 個圖片／附件'+(MVG.miss?'，其中 '+MVG.miss+' 個本來就已遺失':'')+'）\n原帳號 '+A+' 的雲端資料不會被刪除。')){GD.tok='';ls.set('oc_gd_amail',A);gdFill();mvmsg('已取消，沒有改動任何資料');return}
+    mvmsg('切換到 '+esc(B)+'…');
+    ls.set('oc_gd_amail',B);ls.set('oc_gd_main',B);
+    sv('oc_gd_accts',[]);sv('oc_gd_amt',{});sv('oc_gd_adel',{});sv('oc_gd_loc',{});ls.set('oc_gd_dest','a');
+    Object.keys(GT).forEach(k=>delete GT[k]);
+    gdFill();
+    mvmsg('第 ② 步：上傳資料到 '+esc(B)+'…');
+    LASTSYNC=null;await syncAll(false);
+    if(!LASTSYNC||!LASTSYNC.ok)throw new Error('上傳到 '+B+' 沒有完全成功。資料都還在這台裝置上，請看下方同步區塊的原因，處理後按右上角標誌就會繼續上傳');
+    const L2=await gdList(await gdFolder());
+    let have=0,lack=0;
+    for(const x of imgRefs()){if(L2.mf['img_'+x.iid])have++;else if(await imgGet(x.iid))lack++}
+    if(!L2.mf['notes.json']||lack)throw new Error('驗證沒有通過：'+(lack?'還有 '+lack+' 個檔案沒上傳到 '+B+'。':'')+(!L2.mf['notes.json']?'雲端找不到 notes.json。':'')+'資料都還在這台裝置上，請再按一次右上角標誌同步，成功後再確認');
+    const miss=MVG.miss;MVG=null;
+    mvmsg('✅ 搬移完成並驗證：'+have+' 個圖片／附件已在 '+esc(B)+' 的雲端'+(miss?'（另有 '+miss+' 個本來就已遺失）':'')+'。<br>原帳號 '+esc(A)+' 的雲端資料沒有動，可留作備份。這台裝置已改以 '+esc(B)+' 為主帳，之後即使不小心登入 '+esc(A)+'，也不會去同步它的舊資料（只會顯示找不到主帳共用資料夾）。<br>其他裝置也要改登入 '+esc(B)+' 並同步一次。');
+  }catch(err){mvmsg(esc(gerr(err)),1)}
+});
 /* ===== 以 Google 登入／合併同步／自動清理 ===== */
 $('#glogin').onclick=async()=>{try{gdmsg('登入中…');GD.tok='';GD.force=true;const em=await whoTok(await gdAuth());ls.set('oc_gd_amail',em);gdFill();gdmsg('已登入：'+em)}catch(e){gdmsg('失敗：'+gerr(e),1)}};
 /* ===== 本機釋放／按需下載 ===== */
@@ -1693,10 +1815,10 @@ async function gdRemote(m,mf){
   }
   return null;
 }
-let SYNCING=false;
+let SYNCING=false,LASTGD=null;
 async function gdSync(silent){
   silent=silent===true;
-  if(SYNCING||GDBUSY)return;SYNCING=true;GDBUSY=true;const t0=+ls.get('oc_mod','0');
+  if(SYNCING||GDBUSY)return;SYNCING=true;GDBUSY=true;LASTGD=null;const t0=+ls.get('oc_mod','0');
   try{
     if(!silent&&!SYNCALL)gdmsg('同步中…');
     ls.set('oc_gd_amail',await mailA());gdFill();
@@ -1727,9 +1849,9 @@ async function gdSync(silent){
     let sw=null;if(!silent)sw=await gdSweep(fid);
     fillApis();if(!ED){draw('n');draw('e')}drawHist();
     const tm=new Date().toLocaleTimeString('zh-TW');
-    gdmsg((GHPRE?GHPRE+'；':'')+(silent?'Drive 已自動同步 '+tm:'Drive 同步完成 '+tm)+(changed?'（已更新雲端）':'（雲端已是最新）')+(o.up?'；上傳 '+o.up+' 個圖片檔案':'')+(o.fb?'（'+o.fb+' 個儲存帳號失敗，改存共用資料夾）':'')+(o.wait?'；'+o.wait+' 個檔案等待儲存帳號授權':'')+(o.skip?'；'+o.skip+' 個超過 200MB 未上傳':'')+(sw&&(sw.a||sw.b)?'；清理沒在用的雲端圖片 '+(sw.a+sw.b)+' 個':'')+(f.n?'；下載 '+f.n+' 個檔案':'')+(f.sk?'；略過 '+f.sk+' 個大檔（點開時才下載）':'')+(f.miss?'；'+f.miss+' 個檔案在 Drive 找不到'+(f.le?'（'+f.le+'）':''):''));
-    if(!silent)gdSpace();
-  }catch(e){PG.end('Drive 同步失敗',1);gdmsg((GHPRE?GHPRE+'；':'')+'Drive 失敗：'+gerr(e),1)}
+    gdmsg((silent?'Drive 已自動同步 '+tm:'Drive 同步完成 '+tm)+(changed?'（已更新雲端）':'（雲端已是最新）')+(o.up?'；上傳 '+o.up+' 個圖片檔案':'')+(o.fb?'（'+o.fb+' 個儲存帳號失敗，改存共用資料夾）':'')+(o.wait?'；'+o.wait+' 個檔案等待儲存帳號授權':'')+(o.skip?'；'+o.skip+' 個超過 200MB 未上傳':'')+(sw&&(sw.a||sw.b)?'；清理沒在用的雲端圖片 '+(sw.a+sw.b)+' 個':'')+(f.n?'；下載 '+f.n+' 個檔案':'')+(f.sk?'；略過 '+f.sk+' 個大檔（點開時才下載）':'')+(f.miss?'；'+f.miss+' 個檔案在 Drive 找不到'+(f.le?'（'+f.le+'）':''):''));
+    loadQuota(false);if(!silent)gdSpace();
+  }catch(e){LASTGD=e;PG.end('Drive 同步失敗',1);gdmsg('Drive 失敗：'+gerr(e),1)}
   finally{SYNCING=false;GDBUSY=false;if(+ls.get('oc_mod','0')>t0&&window.schedDrive)window.schedDrive()}
 }
 const gdVer=async id=>{const j=await(await gdf(GAPI+'files/'+id+'?fields=version,modifiedTime')).json();return j.version+'|'+j.modifiedTime};
@@ -1825,8 +1947,12 @@ async function ghSync(silent){
   }catch(e){return{msg:'Gist 失敗：'+gerr(e),err:true}}
   finally{GHBUSY=false}
 }
-const updNeed=()=>{const lg=$('#lgo');if(!lg)return;lg.classList.toggle('need',!!ME()&&!(GD.tok&&Date.now()<GD.exp))};
+/* 橘點＝有尚未同步完成的變動（本機最後修改時間 > 最後一次完整同步成功的時間） */
+const dirty=()=>+ls.get('oc_mod','0')>+ls.get('oc_synced','0');
+const updNeed=()=>{const lg=$('#lgo');if(!lg)return;lg.classList.toggle('need',dirty())};
+window.updNeed=updNeed;
 /* 一次同步：先 Gist（文字，隨時可用），再 Drive（圖片與附件，需要授權有效） */
+let LASTSYNC=null;
 async function syncAll(silent){
   silent=silent===true;
   if(SYNCALL||SYNCING||GDBUSY)return;
@@ -1836,25 +1962,30 @@ async function syncAll(silent){
   let ap=Promise.resolve(false),aerr='';
   /* 授權視窗要在點擊當下開，所以在任何等待之前先啟動 */
   if(driveOn){if(tokOk())ap=Promise.resolve(true);else if(!silent)ap=gdAuth().then(()=>true,e=>{aerr=e.message;return false})}
-  let gr={msg:'',err:false},dDone=false,dOk=null;
+  let gr={msg:'',err:false},dDone=false,dOk=null,all=true,fin=false,derr=false;
+  topmsg('同步中…',0,true);
   try{
-    if(!silent)gdmsg('同步中…');
+    if(driveOn&&!silent)gdmsg('Drive：同步中…');
+    if(ghOn&&!silent)ghmsg('Gist：同步中…');
     /* 這台裝置還沒有權杖：先同步 Drive 把權杖拿下來 */
-    if(!ghOn&&driveOn){dOk=await ap;if(dOk){await gdSync(silent);dDone=true;ghOn=GHON()}}
-    if(ghOn){gr=await ghSync(silent);GHPRE=gr.skip?'':gr.msg}
+    if(!ghOn&&driveOn){dOk=await ap;if(dOk){await gdSync(silent);dDone=true;ghOn=GHON();if(LASTGD){all=false;derr=true}}}
+    if(ghOn){gr=await ghSync(silent);if(gr.skip)all=false;else ghmsg(gr.msg,gr.err);if(gr.err)all=false}
     if(driveOn&&!dDone){
       if(dOk===null)dOk=await ap;
-      if(dOk)await gdSync(silent);
-      else if(!ghOn)gdmsg(silent?'Drive 授權已過期，自動同步暫停。請點右上角標誌重新授權':'Drive 授權失敗：'+aerr,1);
-      else gdmsg((GHPRE?GHPRE+'；':'')+(silent?'Drive 授權已過期，圖片暫停同步（點右上角標誌重新授權）':'Drive 授權失敗：'+aerr),gr.err||!silent);
-    }else if(!driveOn)gdmsg(GHPRE,gr.err);
-    else if(ghOn)gdmsg('已從 Drive 取得權杖；'+GHPRE,gr.err);
-    if(ghOn&&!gr.err){
-      if(MIGDONE){MIGDONE=false;const r2=await ghSync(true);if(!r2.err)ls.set('oc_gh_mig','1')}
+      if(dOk){await gdSync(silent);if(LASTGD){all=false;derr=true}}
+      else{all=false;gdmsg(silent?'Drive 授權已過期，圖片暫停同步。點右上角標誌重新授權':'Drive 授權失敗：'+aerr,1)}
+    }
+    if(ghOn&&!gr.err&&!gr.skip){
+      if(MIGDONE){MIGDONE=false;const r2=await ghSync(true);if(r2.err)all=false;else ls.set('oc_gh_mig','1')}
       else if(!ME())ls.set('oc_gh_mig','1');
     }
+    if(all)localStorage.setItem('oc_synced',String(t0));
+    fin=true;
   }finally{
-    SYNCALL=false;GHPRE='';MIGDONE=false;const l2=$('#lgo');if(l2)l2.classList.remove('syn');updNeed();
+    SYNCALL=false;MIGDONE=false;LASTSYNC={ok:all&&fin};
+    const l2=$('#lgo');if(l2)l2.classList.remove('syn');updNeed();
+    if(all&&fin)topmsg(new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false})+' 同步完成');
+    else topmsg((fin&&silent&&!gr.err&&!derr)?'':(fin?'同步未完成，詳情見設定':'同步失敗'),1);
     if(+ls.get('oc_mod','0')>t0&&window.schedDrive)window.schedDrive();
   }
 }
@@ -1870,12 +2001,13 @@ $('#ghtok').value=ls.get('oc_gh_tok','');$('#ghpw').value=ls.get('oc_gh_pw','');
 $('#ghsave').onclick=async()=>{
   const t=$('#ghtok').value.trim(),p=$('#ghpw').value;
   if(!t){ghmsg('請填 GitHub 權杖',1);return}
-  if(t!==GHK()){ls.set('oc_gh_id','');ls.set('oc_gh_mt',String(Date.now()))}
+  if(t!==GHK()){ls.set('oc_gh_id','');ls.set('oc_gh_mt',String(Date.now()));try{localStorage.setItem('oc_mod',String(Date.now()))}catch(e){}}
   ls.set('oc_gh_tok',t);ls.set('oc_gh_pw',p);
   ghmsg('連線中…');
   const r=await ghSync(false);
-  ghmsg(r.msg+(!r.err&&ME()?'；再按一次右上角標誌，權杖就會存進 Drive':''),r.err);
+  ghmsg(r.msg+(!r.err&&ME()?'；權杖會在下次同步時存進 Drive（右上角標誌有橘點時按一下）':''),r.err);
   if(!r.err&&!ME())ls.set('oc_gh_mig','1');
+  if(window.schedPush)window.schedPush();
 };
 $('#ghclr').onclick=()=>{if(!confirm('清除這台裝置上的 GitHub 權杖與同步密碼？Gist 上的資料不會被刪除。'))return;['oc_gh_tok','oc_gh_pw','oc_gh_id','oc_gh_mig','oc_gh_mt'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});$('#ghtok').value='';$('#ghpw').value='';ghmsg('已清除')};
 
@@ -1962,7 +2094,7 @@ $('#nbk').onclick=()=>document.querySelector('nav button[data-t="n"]').click();
 $('#ebk').onclick=()=>document.querySelector('nav button[data-t="e"]').click();
 $('#tbc').onclick=()=>{document.querySelector('nav button[data-t="learn"]').click();if(!S.hist.length&&!S.busy){const a=chats();if(a.length){loadChat(a[0].id);window.scrollTo(0,document.body.scrollHeight)}}};
 $('#lgo').onclick=()=>syncAll();$('#lgo').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();syncAll()}};
-$('#hmb').onclick=()=>{document.querySelectorAll('#mnu button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===CURT));$('#mbk').classList.remove('hide');requestAnimationFrame(()=>$('#mnu').classList.add('open'))};
+$('#hmb').onclick=()=>{loadQuota(false);document.querySelectorAll('#mnu button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===CURT));$('#mbk').classList.remove('hide');requestAnimationFrame(()=>$('#mnu').classList.add('open'))};
 $('#mbk').onclick=mnuClose;
 $('#mnu').onclick=e=>{const b=e.target.closest('button[data-t],button[data-go]');if(!b)return;mnuClose();
   if(b.dataset.t)document.querySelector('nav button[data-t="'+b.dataset.t+'"]').click();
