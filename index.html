@@ -1126,6 +1126,7 @@ const TT={n:'筆記本',e:'AI 摘要'};
   $('#s'+k).oninput=()=>draw(k);
 });
 const GRIP='<span class="dh" aria-label="拖曳排序" title="按住上下拖曳排序"><svg viewBox="0 0 12 18" width="12" height="18" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="3" cy="15" r="1.5"/><circle cx="9" cy="15" r="1.5"/></g></svg></span>';
+const DK={};
 function draw(k){
   const q=$('#s'+k).value.trim().replace(/^#/,'').toLowerCase();
   let fid=V[k];
@@ -1150,7 +1151,13 @@ function draw(k){
     h='<div class="hd"><span class="mut">搜尋結果（所有資料夾）</span></div>';
     d=F.filter(f=>f.name.toLowerCase().includes(q)).map(fc).join('')+list(N.filter(hit),true);
   }
-  $('#h'+k).innerHTML=h;$('#d'+k).innerHTML=d;nbar(k);lazyThumbs(k);
+  const key=fid+'|'+q;let op=[],sl=[];
+  if(DK[k]===key){op=[...document.querySelectorAll('#d'+k+' .selitem[data-c] details[open]')].map(x=>x.closest('.selitem').dataset.c);sl=[...document.querySelectorAll('#d'+k+' .selitem.sel')].map(x=>x.dataset.c||x.dataset.f)}
+  DK[k]=key;
+  $('#h'+k).innerHTML=h;$('#d'+k).innerHTML=d;
+  op.forEach(id=>{const el=document.querySelector('#d'+k+' [data-c="'+id+'"] details');if(el)el.open=true});
+  sl.forEach(id=>{const el=document.querySelector('#d'+k+' [data-c="'+id+'"],#d'+k+' [data-f="'+id+'"]');if(el)el.classList.add('sel')});
+  nbar(k);lazyThumbs(k);
 }
 /* 排序：每則筆記／資料夾存排序值 so（會跟著同步）。筆記沒有 so＝新筆記排最前面，資料夾沒有 so＝新資料夾排最後面 */
 function setOrder(kind,ids){
