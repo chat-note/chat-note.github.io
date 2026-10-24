@@ -251,7 +251,7 @@ body.kbo #dock{padding-bottom:8px}
   <details id="hist" open><summary>聊天紀錄（<span id="hcnt">0</span>）</summary><div id="hlist"></div></details>
   <details id="cfg">
    <summary>模型設定</summary>
-   <div><div class="mut" style="margin-bottom:8px">目前：<span id="cfgsum"></span></div><div style="margin-top:10px">
+   <div><div style="margin-top:10px">
     <div class="row" style="margin-bottom:10px"><select id="api" style="flex:1;min-width:0"></select><button class="b g sm" id="mload" style="flex:none">🔄 讀取可用模型</button></div>
     <div id="mloadmsg" class="mut" style="margin:-4px 0 8px"></div>
     <div class="row" style="margin-bottom:10px">
@@ -265,8 +265,6 @@ body.kbo #dock{padding-bottom:8px}
      <div id="srhint" class="mut hide" style="margin-top:6px">還沒有 Tavily 金鑰：到「設定 → 管理 API → 新增 API」選 Tavily 新增（可新增多組，備註名稱填帳號信箱，這裡就能切換）。</div>
      <div id="srwrap" class="hide">
       <div class="row" style="margin-top:8px"><span class="mut">何時搜尋</span><select id="srmode" style="flex:1;min-width:0"><option value="a">自動（問到最新資料才搜）</option><option value="e">每則都搜</option></select></div>
-      <div class="row" style="margin-top:8px"><button class="b g sm" id="srtest">測試搜尋</button></div>
-      <div id="srmsg" class="mut" style="margin-top:6px"></div>
       <div class="mut" style="margin-top:6px">由搜尋服務查資料，再交給上面選的模型統一回覆。搜尋金鑰存在 API 清單裡，跟其他 API 金鑰一起處理。傳圖片的訊息和「優惠整理」不會搜尋。</div>
      </div>
     </div>
@@ -645,7 +643,7 @@ async function pick(f){
   render();saveChat();ask();
 }
 $('#cam').onchange=e=>{const fs=[...e.target.files];e.target.value='';stage(fs)};
-$('#mode').onchange=()=>{S.mode=$('#mode').value;cfgSum()};
+$('#mode').onchange=()=>{S.mode=$('#mode').value};
 let CMT=0,LPN=false;
 document.addEventListener('click',e=>{if(!e.target.closest('#cmenu')&&Date.now()-CMT>500)$('#cmenu').classList.add('hide')});
 $('#reset').onclick=()=>{document.querySelector('nav button[data-t="learn"]').click();clearQuote();S.att=[];drawAtt();$('#cmenu').classList.add('hide');if(S.ctl)S.ctl.abort('user');S.hist=[];S.cid=null;S.thumb=null;S.start=0;S.pend=null;S.sel.clear();S.snip='';$('#status').textContent='';render();drawHist()};
@@ -753,7 +751,7 @@ function loadChat(id,quiet){
   const c=chats().find(x=>x.id===id);if(!c)return;
   if(S.busy){$('#status').textContent='AI 回應中，請稍候，或先長按下方「聊天」選「新聊天」中止。';return}
   S.cid=c.id;S.hist=c.hist;S.start=c.start||0;S.thumb=c.thumb||null;S.mode=c.mode||'q';$('#mode').value=S.mode;S.pend=null;S.sel.clear();$('#status').textContent='';
-  cfgSum();render(quiet);drawHist();restoreImgs();
+  render(quiet);drawHist();restoreImgs();
 }
 $('#hlist').onclick=e=>{
   const t=e.target.closest('[data-h]');if(!t)return;
@@ -1492,7 +1490,6 @@ $('#exall').onclick=()=>{document.querySelectorAll('#exlist input').forEach(c=>c
 $('#exclr').onclick=()=>{document.querySelectorAll('#exlist input').forEach(c=>c.checked=false);exCnt()};
 $('#exgo').onclick=()=>ankiOut([...document.querySelectorAll('#exlist input[value]:checked')].map(c=>c.value));
 /* ===== API 套用／管理 ===== */
-function cfgSum(){const c=cur();$('#cfgsum').textContent=(c?label(c)+' / '+(c.model||'未設定'):'尚未設定')+' / '+($('#mode').value==='o'?'優惠整理':'題目討論')+(SR.on()?' / 搜尋：'+SR.name():'')}
 function fillApis(){
   const a=chatApis(),all=apis(),c=cur();
   $('#api').innerHTML=a.length?a.map(x=>'<option value="'+x.id+'">'+esc(label(x))+'</option>').join(''):'<option value="">尚未新增 API（到設定新增）</option>';
@@ -1508,7 +1505,7 @@ function fillApis(){
   $('#think').value=ls.get('oc_think','low');
   $('#uselist').innerHTML=a.length?a.map(x=>'<label style="display:flex;gap:10px;align-items:center;margin:8px 0"><input type="radio" name="useapi" value="'+x.id+'" style="width:22px;flex:none"'+(c&&c.id===x.id?' checked':'')+'><span><span class="tag" style="color:var(--acc);border-color:var(--acc)">'+esc(pn(x))+'</span><b>'+esc(x.name||'未命名')+'</b><br><span class="mut">金鑰 …'+esc(x.key.slice(-4))+'｜模型 '+esc(x.model||'未設定')+'</span></span></label>').join(''):'<p class="mut">還沒有 API，請按下方「管理 API」新增。</p>';
   $('#managelist').innerHTML=all.length?all.map(x=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span><b>'+esc(pn(x))+'</b>'+(x.name?' · '+esc(x.name):'')+' <span class="mut">…'+esc(x.key.slice(-4))+'</span></span><button class="b g" style="padding:6px 12px" data-rm="'+x.id+'">移除</button></div>').join(''):'<p class="mut">沒有可管理的 API。</p>';
-  cfgSum();
+  
 }
 async function fetchModels(x){
   let url,h={},pick;
@@ -1553,16 +1550,8 @@ function srFill(){
   $('#srhint').classList.toggle('hide',L.length>0);
   $('#srmode').value=ls.get('oc_sr_mode','a');
 }
-$('#srprov').onchange=()=>{ls.set('oc_sr_act',$('#srprov').value);$('#srmsg').textContent='';srFill();cfgSum()};
+$('#srprov').onchange=()=>{ls.set('oc_sr_act',$('#srprov').value);srFill()};
 $('#srmode').onchange=()=>ls.set('oc_sr_mode',$('#srmode').value);
-$('#srtest').onclick=async()=>{
-  const m=$('#srmsg');
-  if(!SR.on()){m.innerHTML='<span class="err">請先選一個 Tavily 帳號</span>';return}
-  $('#srtest').disabled=true;m.textContent='測試中…';
-  try{const r=await srRun('今天台灣的重要新聞');m.textContent='✅ 成功：'+r.src+(r.n?'，'+r.n+' 筆來源':'')+'。範例：'+r.text.replace(/\s+/g,' ').slice(0,120)+'…'}
-  catch(e){m.innerHTML='<span class="err">失敗：'+esc(e.message)+'</span>'}
-  $('#srtest').disabled=false;
-};
 $('#managelist').onclick=e=>{
   const id=e.target.dataset.rm;if(!id)return;
   const x=apis().find(y=>y.id===id);
