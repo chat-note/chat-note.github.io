@@ -54,7 +54,7 @@ h2{font-size:19px;margin:6px 0 12px}h3{font-size:17px;margin:0 0 6px}
 .tag{display:inline-block;font-size:13px;padding:2px 10px;border:1px solid transparent;border-radius:99px;margin:0 6px 4px 0;background:var(--me);color:var(--acc2)}
 .tag.kw{cursor:pointer}
 details summary{cursor:pointer;color:var(--acc);font-weight:600}
-.hide{display:none}
+.hide{display:none!important}
 .act{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.act button{font-size:13px;padding:4px 11px;border:1.5px solid var(--acc);background:var(--card);color:var(--acc);border-radius:6px;font-weight:600}
 #mdl{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
 #mdl.hide{display:none}
@@ -86,7 +86,7 @@ details summary{cursor:pointer;color:var(--acc);font-weight:600}
 #pg .fl{height:100%;width:0;background:var(--acc);transition:width .15s}
 .it details[open]{border:1px solid var(--acc);border-radius:8px;padding:8px 10px;margin-top:8px;background:var(--bg)}
 #top{display:flex;align-items:center;gap:10px;margin:0 0 10px}#top b{display:inline-block;background:linear-gradient(135deg,#2a8f76,#0f4c3f);color:#fff;padding:6px 18px 8px;border-radius:12px;font-size:24px;font-weight:500;letter-spacing:-.2px;line-height:1.2;font-family:"Tiempos Headline","Tiempos Text",Copernicus,"Iowan Old Style","Palatino Linotype",Georgia,"Times New Roman",serif}
-#dock textarea{resize:none;max-height:120px;min-height:44px;box-sizing:border-box;display:block}
+#dock textarea{resize:none;max-height:158px;min-height:44px;box-sizing:border-box;display:block;overflow-y:hidden}
 #dock #send{height:44px;padding:0 18px;box-sizing:border-box;line-height:1}
 #cmenu{position:fixed;left:8px;bottom:calc(var(--bt,56px) + var(--kb,0px) + 8px);z-index:40;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 #cmenu.hide{display:none}
@@ -651,7 +651,7 @@ $('#mode').onchange=()=>{S.mode=$('#mode').value};
 let CMT=0,LPN=false;
 document.addEventListener('click',e=>{if(!e.target.closest('#cmenu')&&Date.now()-CMT>500)$('#cmenu').classList.add('hide')});
 $('#reset').onclick=()=>{document.querySelector('nav button[data-t="learn"]').click();clearQuote();S.att=[];drawAtt();$('#cmenu').classList.add('hide');if(S.ctl)S.ctl.abort('user');S.hist=[];S.cid=null;S.thumb=null;S.start=0;S.pend=null;S.sel.clear();S.snip='';$('#status').textContent='';render();drawHist()};
-const autoH=()=>{const q=$('#q');q.style.height='auto';q.style.height=Math.min(q.scrollHeight,120)+'px'};
+const autoH=()=>{const q=$('#q');q.style.height='auto';const cs=getComputedStyle(q),bd=(parseFloat(cs.borderTopWidth)||0)+(parseFloat(cs.borderBottomWidth)||0),mx=158,h=q.scrollHeight+bd;q.style.height=Math.min(h,mx)+'px';q.style.overflowY=h>mx+1?'auto':'hidden'};
 const xRef=r=>(r||document).querySelectorAll('.xw').forEach(w=>{const f=w.querySelector('input,textarea');if(f)w.classList.toggle('hx',!!f.value)});
 const updSend=()=>{xRef($('#dock'));$('#send').classList.toggle('g',!!S.busy);$('#send').textContent=S.busy?'取消':($('#q').value.trim()||S.att.length)?'送出':'拍照'};
 $('#q').addEventListener('input',()=>{autoH();updSend()});
