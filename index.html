@@ -161,7 +161,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-c</small></span></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-e</small></span></header>
 <section id="p-learn">
  <div class="mut gdt" style="margin:0 0 6px"></div>
  <div id="chat"></div>
@@ -257,7 +257,7 @@ body.kbo #dock{padding-bottom:8px}
      <span id="thinkwrap" class="row" style="gap:6px;flex-wrap:nowrap"><span class="mut">思考</span><select id="think" style="width:auto"><option value="">預設</option><option value="low">低</option><option value="medium">中</option><option value="high">高</option></select></span>
     </div>
     <div class="row"><span class="mut">用途</span><select id="mode" style="flex:1;min-width:0"><option value="q">題目討論（任何科目）</option><option value="o">優惠整理（QR、海報、截圖）</option></select></div>
-    <div class="row" id="gswrap" style="margin-top:10px"><span class="mut">Google 搜尋</span><select id="gsearch" style="flex:1;min-width:0"><option value="1">開（可查最新資料）</option><option value="0">關</option></select></div>
+    <div class="row" id="gswrap" style="margin-top:10px"><span class="mut">Google 搜尋</span><select id="gsearch" style="flex:1;min-width:0"><option value="1">開（免費額度可能用不了）</option><option value="0">關</option></select></div>
    </div>
   </div>
   </details>
@@ -396,7 +396,27 @@ const selP=(m,v)=>(m==='o'
 function ctx(h){let n=0;return h.slice().reverse().map(m=>{if(m.parts.some(isImg)){n++;if(n>2)return{role:m.role,parts:m.parts.filter(p=>!p.inline_data).concat([{text:'（較早的圖片已省略）'}])}}return m}).reverse()}
 
 /* ===== 呼叫模型（串流） ===== */
+/* 模型實際已下架（清單還列著但呼叫會 404）：7 天內從選單隱藏 */
+function markDead(id,m){
+  const a=apis(),x=a.find(y=>y.id===id);if(!x)return;
+  x.dead=x.dead||{};x.dead[m]=Date.now();
+  if(x.model===m&&P[x.p].d&&P[x.p].d!==m)x.model=P[x.p].d;
+  saveApis(a);try{fillApis()}catch(e){}
+}
+/* Google 搜尋回 429（常是免費額度沒有搜尋用量）：自動改成不搜尋再問一次 */
 async function gen(contents,system,o){
+  o=o||{};
+  try{return await gen0(contents,system,o)}
+  catch(e){
+    const c=cur();
+    if(e&&e.http===429&&c&&c.p==='gemini'&&!o.json&&!o.nosearch&&ls.get('oc_gsearch','0')==='1'){
+      const r=await gen0(contents,system,Object.assign({},o,{nosearch:true}));
+      window.GSFB=e.message||'429';return r;
+    }
+    throw e;
+  }
+}
+async function gen0(contents,system,o){
   o=o||{};
   const A=cur();
   if(!A)throw new Error('請先到「設定」新增 API');
@@ -414,7 +434,7 @@ async function gen(contents,system,o){
     if(th)tc.thinkingLevel=th;
     if(Object.keys(tc).length)gc.thinkingConfig=tc;
     if(Object.keys(gc).length)body.generationConfig=gc;
-    if(!o.json&&ls.get('oc_gsearch','1')==='1'){body.tools=[{google_search:{}}];body.systemInstruction.parts[0].text=system+'\n今天日期：'+new Date().toLocaleDateString('zh-TW')+'。如果問題需要最新資料（新聞、價格、版本、近期事件），請使用 Google 搜尋並以搜尋結果為準；一般知識或題目解析不需要搜尋。'}
+    if(!o.json&&!o.nosearch&&ls.get('oc_gsearch','0')==='1'){body.tools=[{google_search:{}}];body.systemInstruction.parts[0].text=system+'\n今天日期：'+new Date().toLocaleDateString('zh-TW')+'。如果問題需要最新資料（新聞、價格、版本、近期事件），請使用 Google 搜尋並以搜尋結果為準；一般知識或題目解析不需要搜尋。'}
   }else if(p==='claude'){
     url='https://api.anthropic.com/v1/messages';
     headers['x-api-key']=c.key;headers['anthropic-version']='2023-06-01';headers['anthropic-dangerous-direct-browser-access']='true';
@@ -446,8 +466,12 @@ async function gen(contents,system,o){
       const d=await r.json().catch(()=>({}));
       const msg=(d.error&&d.error.message)||(Array.isArray(d)&&d[0]&&d[0].error&&d[0].error.message)||('錯誤 '+r.status);
       if(r.status===401||r.status===403)throw new Error(P[p].n+' 拒絕了這個金鑰（'+r.status+'）。請檢查金鑰、權限或餘額。\n原始訊息：'+msg);
-      if(r.status===404)throw new Error('找不到這個模型或網址，請檢查模型名稱。\n原始訊息：'+msg);
-      if(r.status===429)throw new Error('額度用完或請求太頻繁（429）。請稍後再試，或換一個模型。');
+      if(r.status===404){
+        const gone=/no longer available|not found|not supported/i.test(msg)&&p!=='compat';
+        if(gone)markDead(A.id,m);
+        throw new Error(/no longer available/i.test(msg)?'這個模型已下架（'+m+'）。Google 的模型列表仍會顯示它，但實際已無法使用，已從選單隱藏，請改選其他模型。\n原始訊息：'+msg:'找不到這個模型或網址，請檢查模型名稱。'+(gone?'（已先從選單隱藏）':'')+'\n原始訊息：'+msg);
+      }
+      if(r.status===429){const er=new Error('額度用完或請求太頻繁（429）。請稍後再試，或換一個模型。\n原始訊息：'+msg);er.http=429;throw er}
       if(r.status===503||r.status===529||/overload|high demand|unavailable/i.test(msg))throw new Error('這個模型現在使用人數太多，請稍等幾分鐘重試或換一個模型。\n原始訊息：'+msg);
       throw new Error(msg+(p==='gemini'&&/think/i.test(msg)?'\n（可能與思考設定有關，請把思考改成「預設」）':'')+(p==='gemini'&&/search|ground|tool/i.test(msg)?'\n（可能與 Google 搜尋有關，請到左上角選單「模型設定」把「Google 搜尋」改成關）':''));
     }
@@ -510,10 +534,10 @@ async function ask(){
   const t0=Date.now();let th='';
   const tick=()=>{const sec=Math.round((Date.now()-t0)/1000);$('#status').innerHTML=esc(provName())+' 運作中… 已等待 '+sec+' 秒'+(th?'<br><span class="mut">'+esc(th.slice(-100).replace(/\s+/g,' '))+'</span>':'')};
   busy(true,'');tick();const iv=setInterval(tick,1000);
-  S.hist.push({role:'model',t:Date.now(),parts:[{text:''}]});const idx=S.hist.length-1;
+  S.hist.push({role:'model',t:Date.now(),parts:[{text:''}]});const idx=S.hist.length-1;window.GSFB=0;
   try{
     await gen(S.hist.slice(0,idx),S.mode==='o'?SYSO:SYS,{on:(t,h)=>{S.hist[idx].parts[0].text=t;th=h;render()}});S.hist[idx].t=Date.now();
-    clearInterval(iv);busy(false,'');
+    clearInterval(iv);busy(false,window.GSFB?'<span class="mut">Google 搜尋被拒（429），這則已改成不搜尋回答。Google 回的原因：'+esc(String(window.GSFB).replace(/^[\s\S]*原始訊息：/,'').slice(0,500))+'</span>':'');
   }catch(e){clearInterval(iv);S.hist.pop();S.sel.delete(idx);busy(false,(S.ctl&&S.ctl.signal.aborted)?'<span class="mut">已取消</span>':errH(e))}
   render();saveChat();
 }
@@ -1284,19 +1308,19 @@ $('#exall').onclick=()=>{document.querySelectorAll('#exlist input').forEach(c=>c
 $('#exclr').onclick=()=>{document.querySelectorAll('#exlist input').forEach(c=>c.checked=false);exCnt()};
 $('#exgo').onclick=()=>ankiOut([...document.querySelectorAll('#exlist input[value]:checked')].map(c=>c.value));
 /* ===== API 套用／管理 ===== */
-function cfgSum(){const c=cur();$('#cfgsum').textContent=(c?label(c)+' / '+(c.model||'未設定'):'尚未設定')+' / '+($('#mode').value==='o'?'優惠整理':'題目討論')+(c&&c.p==='gemini'&&ls.get('oc_gsearch','1')==='1'?' / 搜尋開':'')}
+function cfgSum(){const c=cur();$('#cfgsum').textContent=(c?label(c)+' / '+(c.model||'未設定'):'尚未設定')+' / '+($('#mode').value==='o'?'優惠整理':'題目討論')+(c&&c.p==='gemini'&&ls.get('oc_gsearch','0')==='1'?' / 搜尋開':'')}
 function fillApis(){
   const a=apis(),c=cur();
   $('#api').innerHTML=a.length?a.map(x=>'<option value="'+x.id+'">'+esc(label(x))+'</option>').join(''):'<option value="">尚未新增 API（到設定新增）</option>';
   if(c)$('#api').value=c.id;
-  const ml=c?((c.models&&c.models.length)?c.models:P[c.p].m):[],cm=c?(c.model||''):'';
+  const dd=(c&&c.dead)||{},ml=(c?((c.models&&c.models.length)?c.models:P[c.p].m):[]).filter(x=>!(dd[x]&&Date.now()-dd[x]<7*864e5)),cm=c?(c.model||''):'';
   const noList=!ml.length,custom=S.cm&&!noList;
   $('#lmodel').value=cm;$('#lmodel').disabled=!c;
   $('#msel').classList.toggle('hide',noList);
   $('#msel').innerHTML=ml.map(x=>'<option value="'+esc(x)+'"'+(!custom&&x===cm?' selected':'')+'>'+esc(x)+'</option>').join('')+(cm&&!ml.includes(cm)&&!custom?'<option value="'+esc(cm)+'" selected>'+esc(cm)+'</option>':'')+'<option value="__c"'+(custom?' selected':'')+'>自訂模型名稱…</option>';
   $('#lmodel').classList.toggle('hide',!(noList||custom));
   $('#thinkwrap').classList.toggle('hide',!(c&&c.p==='gemini'));
-  $('#gswrap').classList.toggle('hide',!(c&&c.p==='gemini'));$('#gsearch').value=ls.get('oc_gsearch','1');
+  $('#gswrap').classList.toggle('hide',!(c&&c.p==='gemini'));$('#gsearch').value=ls.get('oc_gsearch','0');
   $('#think').value=ls.get('oc_think','low');
   $('#uselist').innerHTML=a.length?a.map(x=>'<label style="display:flex;gap:10px;align-items:center;margin:8px 0"><input type="radio" name="useapi" value="'+x.id+'" style="width:22px;flex:none"'+(c&&c.id===x.id?' checked':'')+'><span><span class="tag" style="color:var(--acc);border-color:var(--acc)">'+esc(P[x.p].n)+'</span><b>'+esc(x.name||'未命名')+'</b><br><span class="mut">金鑰 …'+esc(x.key.slice(-4))+'｜模型 '+esc(x.model||'未設定')+'</span></span></label>').join(''):'<p class="mut">還沒有 API，請按下方「管理 API」新增。</p>';
   $('#managelist').innerHTML=a.length?a.map(x=>'<div class="row" style="justify-content:space-between;margin:8px 0"><span><b>'+esc(P[x.p].n)+'</b>'+(x.name?' · '+esc(x.name):'')+' <span class="mut">…'+esc(x.key.slice(-4))+'</span></span><button class="b g" style="padding:6px 12px" data-rm="'+x.id+'">移除</button></div>').join(''):'<p class="mut">沒有可管理的 API。</p>';
@@ -1321,7 +1345,7 @@ async function loadModels(id,quiet){
   try{
     const l=await fetchModels(x);x.models=l;
     if(!x.model||(!l.includes(x.model)&&P[x.p].m.includes(x.model)))x.model=l.includes(P[x.p].d)?P[x.p].d:(l.find(n=>/flash/i.test(n)&&!/lite/i.test(n))||l[0]);
-    saveApis(a);fillApis();msg.textContent='已讀取 '+l.length+' 個可用模型（'+new Date().toLocaleTimeString('zh-TW')+'）';
+    saveApis(a);fillApis();msg.textContent='已讀取 '+l.length+' 個可用模型（'+new Date().toLocaleTimeString('zh-TW')+'）。清單可能含已下架的模型，選到時會自動隱藏';
   }catch(e){msg.textContent='讀取模型失敗：'+e.message+(quiet?'（先使用內建清單）':'')}
   btn.disabled=false;
 }
