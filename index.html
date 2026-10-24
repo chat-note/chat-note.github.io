@@ -36,7 +36,7 @@ input,select,textarea{width:100%;font:inherit;padding:11px;border:1px solid var(
 .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px}
 .msg{white-space:pre-wrap;padding:11px 13px;border-radius:10px;margin:0 0 10px;max-width:94%;background:var(--card);border:1px solid var(--bd);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .msg.me{background:var(--me);margin-left:auto;border-color:transparent}
-.msg a{color:var(--acc);text-decoration:underline;overflow-wrap:anywhere;word-break:break-all;-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}
+.msg a,.nbd a{color:var(--acc);text-decoration:underline;overflow-wrap:anywhere;word-break:break-all;-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}
 .msg.tx{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .selitem{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .selitem details>*:not(summary){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
@@ -201,13 +201,6 @@ body.kbo #dock{padding-bottom:8px}
     <div class="mut" id="gdsp" style="margin-top:8px"></div>
     <label style="display:flex;gap:10px;align-items:center;margin:12px 0 6px"><input type="checkbox" id="gdauto" style="width:22px;flex:none" checked><span>改完資料自動同步（Gist 隨時可用；Drive 需授權有效）</span></label>
     <div class="mut gdst" id="gdstat" style="margin-top:8px"></div>
-   </div>
-  </details>
-  <details class="card"><summary>貼上檢查（上下標／化學式）</summary>
-   <div style="margin-top:10px">
-    <p class="mut" style="margin-top:0">貼上沒有變成 ₂、⁻ 時，在下面的框按貼上，會顯示剪貼簿裡到底有沒有上下標資訊，以及會被貼成什麼。</p>
-    <textarea id="pchk" rows="2" placeholder="在這裡貼上（Ctrl+V 或長按貼上）"></textarea>
-    <pre id="pchkr" class="mut" style="white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;font:13px/1.5 inherit"></pre>
    </div>
   </details>
   <details class="card"><summary>GitHub Gist 同步</summary>
@@ -896,29 +889,6 @@ function htmlToPlain(html){
   walk(d.body);
   return out.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
 }
-function hdump(html){
-  let c='';
-  try{
-    const d=new DOMParser().parseFromString(html,'text/html'),q=s=>d.querySelectorAll(s).length;
-    c='\n\n結構計數：.katex='+q('.katex')+'、math='+q('math')+'、annotation='+q('annotation')+'、.msupsub='+q('.msupsub')+'、.katex-html='+q('.katex-html')+'、[data-math]='+q('[data-math]')+'、img='+q('img')+'、sub/sup='+q('sub,sup');
-  }catch(e){}
-  const bare=html.replace(/\s+style="[^"]*"/g,'').replace(/\s+_ng[\w-]*=""/g,'').replace(/\s+/g,' ');
-  const m=/katex|<math|data-math|msupsub|<sub|<sup/i.exec(bare),at=m?Math.max(0,m.index-200):0;
-  return c+'\n\n公式附近的 HTML（已去掉 style，共 '+bare.length+' 字，從第 '+at+' 字起 900 字）：\n'+bare.slice(at,at+900);
-}
-/* 貼上檢查：說明剪貼簿裡到底有什麼 */
-function pasteCheck(cd){
-  const html=cd.getData('text/html'),plain=cd.getData('text/plain'),f=[];
-  if(/<su[bp][\s>]/i.test(html))f.push('<sub>/<sup> 標籤');
-  if(/vertical-align\s*:\s*(sub|super)/i.test(html))f.push('vertical-align 樣式');
-  if(/<ms(ub|up|ubsup)[\s>]|<math[\s>]/i.test(html))f.push('MathML 公式');
-  if(/class="[^"]*\bkatex\b/i.test(html))f.push('KaTeX 公式');
-  if(/<mjx-container|MathJax/i.test(html))f.push('MathJax 公式');
-  if(/class="(?:[^"]*\s)?su[bp](?:script)?(?:\s[^"]*)?"/i.test(html))f.push('class 名稱為 sub/sup');
-  if(/<img[\s>]/i.test(html))f.push('含圖片（公式可能是圖片，無法轉成文字）');
-  const conv=SUBRE.test(html)?htmlToPlain(html):'';
-  return '剪貼簿格式：'+([...cd.types].join('、')||'（空）')+'\n偵測到：'+(f.length?f.join('、'):'沒有任何上下標資訊'+(html?'（來源有 HTML，但上下標沒有被標記出來）':'（來源只有純文字）'))+'\n\n純文字內容：\n'+plain.slice(0,300)+'\n\n轉換後會貼成：\n'+(conv||'（沒有可轉換的格式，會原樣貼上）').slice(0,300)+(html?hdump(html):'');
-}
 let PNOTED=false;
 function pasteNote(t){
   try{if(!S.busy){const st=$('#status');st.textContent=t;setTimeout(()=>{if(st.textContent===t)st.textContent=''},9000)}}catch(e){}
@@ -928,10 +898,9 @@ document.addEventListener('paste',e=>{
   const el=e.target;if(!el||!/^(TEXTAREA|INPUT)$/.test(el.tagName))return;
   if(el.tagName==='INPUT'&&!/^(|text|search)$/.test(el.type))return;
   const cd=e.clipboardData;if(!cd)return;
-  if(el.id==='pchk'){e.preventDefault();$('#pchkr').textContent=pasteCheck(cd);return}
   const html=cd.getData('text/html');
   if(!html||!SUBRE.test(html)){
-    if(!PNOTED&&/[A-Z][a-z]?\d/.test(cd.getData('text/plain'))){PNOTED=true;pasteNote('這次貼上的內容沒有帶下標／上標格式（來源只給純文字，或公式是圖片），所以沒辦法自動變成 ₂。可到「設定 → 貼上檢查」確認剪貼簿內容。')}
+    if(!PNOTED&&/[A-Z][a-z]?\d/.test(cd.getData('text/plain'))){PNOTED=true;pasteNote('這次貼上的內容沒有帶下標／上標格式（來源只給純文字，或公式是圖片），所以沒辦法自動變成 ₂。')}
     return;
   }
   const t=htmlToPlain(html);if(!t)return;
@@ -1163,7 +1132,7 @@ function draw(k){
   const qs=q.split(/[\s,，、#]+/).filter(Boolean);
   const hit=n=>{const h=(tex(n.title)+' '+tex(n.body)+' '+(n.kws||[]).join(' ')+' '+fn(n.fid)).toLowerCase();return qs.every(w=>h.includes(w))};
   const fc=f=>'<div class="it selitem" data-f="'+f.id+'"><div data-a="of" data-i="'+f.id+'" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b class="tt">📁 '+esc(f.name)+'</b><br><span class="mut">'+N.filter(n=>n.fid===f.id).length+' 則</span></span><span>›</span></div></div>';
-  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px"><div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(n.body))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button><button data-a="shn" data-i="'+n.id+'">分享</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
+  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px"><div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div class="nbd" style="white-space:pre-wrap;margin:8px 0">'+linkify(esc(tex(n.body)))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button><button data-a="shn" data-i="'+n.id+'">分享</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
   const bar='';
   let h,d;
   if(fid){
@@ -1217,7 +1186,7 @@ async function aiMerge(k){
     const o=jparse(await call([{role:'user',parts:[{text:pr}]}],SYS2,true));
     const rec={title:o.title||sel[0].title,body:Array.isArray(o.body)?o.body.join('\n'):(o.body||''),kws:clean([...(o.kws||[]),...sel.flatMap(x=>x.kws||[])])};
     AP={k,ids,rec};
-    $('#ap'+k).innerHTML='<div class="card"><b>'+(sel.length===1?'摘要結果':'整併摘要結果')+'（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(rec.body))+'</div><p>存到AI 摘要資料夾：<select>'+folderOpts('e',last().e)+'</select></p>'+(k==='e'?'<p class="mut">存入後會移除被整併的 '+sel.length+' 則。</p>':'')+'<div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
+    $('#ap'+k).innerHTML='<div class="card"><b>'+(sel.length===1?'摘要結果':'整併摘要結果')+'（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div class="nbd" style="white-space:pre-wrap;margin:8px 0">'+linkify(esc(tex(rec.body)))+'</div><p>存到AI 摘要資料夾：<select>'+folderOpts('e',last().e)+'</select></p>'+(k==='e'?'<p class="mut">存入後會移除被整併的 '+sel.length+' 則。</p>':'')+'<div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
   }catch(e){$('#ap'+k).innerHTML='<p>'+errH(e)+'</p>'}
 }
 function openPick(k){
@@ -1244,7 +1213,7 @@ async function pickMerge(k,src,cnt){
     const o=jparse(await call([{role:'user',parts:[{text:pr}]}],SYS2,true));
     const rec={title:o.title||'AI 摘要',body:Array.isArray(o.body)?o.body.join('\n'):(o.body||''),kws:clean(o.kws||[])};
     AP={k,ids:[],rec};
-    $('#ap'+k).innerHTML='<div class="card"><b>整併結果（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div style="white-space:pre-wrap;margin:8px 0">'+esc(tex(rec.body))+'</div><p>存到 AI 摘要資料夾：<select>'+folderOpts('e',V.e||last().e)+'</select></p><p class="mut">原本挑選的聊天與筆記都不會被動到。</p><div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
+    $('#ap'+k).innerHTML='<div class="card"><b>整併結果（尚未存入）</b><h3 style="margin-top:8px">'+esc(tex(rec.title))+'</h3>'+kt(rec.kws)+'<div class="nbd" style="white-space:pre-wrap;margin:8px 0">'+linkify(esc(tex(rec.body)))+'</div><p>存到 AI 摘要資料夾：<select>'+folderOpts('e',V.e||last().e)+'</select></p><p class="mut">原本挑選的聊天與筆記都不會被動到。</p><div class="row"><button class="b" data-a="aok">確認存入</button><button class="b g" data-a="ac">取消</button></div></div>';
     $('#ap'+k).scrollIntoView({behavior:'smooth',block:'start'});
   }catch(e){$('#ap'+k).innerHTML='<p>'+errH(e)+'</p>'}
 }
