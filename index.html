@@ -748,6 +748,7 @@ function saveChat(){
   if(!S.hist.length)return;
   if(!S.cid)S.cid=uid();
   const rec={id:S.cid,ts:Date.now(),title:chatTitle(),mode:S.mode,start:S.start,thumb:S.thumb,hist:S.hist.map(slimMsg)};
+  S.ts=rec.ts;
   const a=[rec,...chats().filter(x=>x.id!==S.cid)].slice(0,50);
   while(!sv('oc_chats',a)&&a.length>1)a.pop();
   drawHist();
@@ -760,7 +761,7 @@ function drawHist(){
 function loadChat(id,quiet){
   const c=chats().find(x=>x.id===id);if(!c)return;
   if(S.busy){$('#status').textContent='AI 回應中，請稍候，或先長按下方「聊天」選「新聊天」中止。';return}
-  S.cid=c.id;S.hist=c.hist;S.start=c.start||0;S.thumb=c.thumb||null;S.mode=c.mode||'q';$('#mode').value=S.mode;S.pend=null;S.sel.clear();$('#status').textContent='';
+  S.cid=c.id;S.ts=c.ts;S.hist=c.hist;S.start=c.start||0;S.thumb=c.thumb||null;S.mode=c.mode||'q';$('#mode').value=S.mode;S.pend=null;S.sel.clear();$('#status').textContent='';
   render(quiet);drawHist();restoreImgs();
 }
 $('#hlist').onclick=e=>{
@@ -2253,7 +2254,7 @@ async function ghDec(t){
   const o=GHPW();if(o){try{return await dec(t,o)}catch(e){}}
   throw new Error('無法解密 Gist：這份資料是用舊同步密碼加密的，請在設定的「舊同步密碼」欄填入一次');
 }
-let GHBUSY=false,GHPRE='',MIGDONE=false,SYNCALL=false;
+let GHBUSY=false,GHPRE='',MIGDONE=false,SYNCALL=false,GHLV='',POLLB=false;
 const GHE=st=>{const e=new Error(st===401?'GitHub 權杖無效或已被撤銷':st===403?'GitHub 拒絕存取（權杖需勾選 gist 權限，或已達使用上限）':st===404?'找不到 Gist（權杖需勾選 gist 權限，或 Gist 已被刪除）':'GitHub 錯誤 '+st);e.st=st;return e};
 const ghf=async(p,o)=>{let r;try{r=await fetch('https://api.github.com'+p,Object.assign({},o,{headers:Object.assign({Authorization:'Bearer '+GHK(),Accept:'application/vnd.github+json'},(o||{}).headers)}))}catch(e){throw new Error('連不上 GitHub，請檢查網路')}if(!r.ok)throw GHE(r.status);return r};
 async function ghFind(){
@@ -2304,6 +2305,7 @@ async function ghSync(silent){
       }
       break;
     }
+    try{if(id)GHLV=await ghVer(id)}catch(e){}
     fillApis();if(!ED){draw('n');draw('e')}drawHist();
     const tm=new Date().toLocaleTimeString('zh-TW');
     return{msg:'Gist '+(silent?'已自動同步 ':'同步完成 ')+tm+(made?'（已建立新的 Gist）':changed?'（已更新雲端）':'（雲端已是最新）'),err:false};
@@ -2348,7 +2350,7 @@ async function syncAll(silent){
   }finally{
     SYNCALL=false;MIGDONE=false;LASTSYNC={ok:all&&fin};
     {const bad=!(all&&fin)&&(!silent||gr.err||derr||!fin);try{if(all&&fin)localStorage.removeItem('oc_syncfail');else if(bad)localStorage.setItem('oc_syncfail','1')}catch(e){}}
-    const l2=$('#lgo');if(l2)l2.classList.remove('syn');updNeed();
+    const l2=$('#lgo');if(l2)l2.classList.remove('syn');updNeed();try{refreshChat()}catch(e){}
     if(all&&fin)topmsg(new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',hour12:false})+' 同步完成');
     else topmsg((fin&&silent&&!gr.err&&!derr)?'':(fin?'同步未完成，詳情見設定':'同步失敗'),1);
     if(+ls.get('oc_mod','0')>t0&&window.schedDrive)window.schedDrive();
@@ -2360,6 +2362,23 @@ let LASTAUTO=0;
 const autoNow=()=>{if(!GHON()||ls.get('oc_gd_auto','1')!=='1'||Date.now()-LASTAUTO<30000)return;LASTAUTO=Date.now();syncAll(true)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoNow()});
 setTimeout(autoNow,1500);
+/* 畫面開著時，每 20 秒只問一次 Gist 版本號（很輕）；有人更新才真正同步 */
+async function pollRemote(){
+  if(document.hidden||!GHON()||ls.get('oc_gd_auto','1')!=='1'||!GHID()||GHBUSY||SYNCALL||SYNCING||GDBUSY||POLLB||S.busy||S.sending)return;
+  POLLB=true;
+  try{const v=await ghVer(GHID());if(GHLV&&v&&v!==GHLV)await syncAll(true);else if(!GHLV&&v)GHLV=v}catch(e){}
+  finally{POLLB=false}
+}
+setInterval(pollRemote,20000);
+function refreshChat(){
+  if(S.busy||S.sending||!S.cid)return;
+  const c=chats().find(x=>x.id===S.cid);
+  if(!c||!(c.ts>(S.ts||0)))return;
+  const nb=innerHeight+scrollY>=document.body.scrollHeight-150;
+  S.hist=c.hist;S.ts=c.ts;S.start=c.start||0;S.sel.clear();
+  render(true);restoreImgs();
+  if(nb)window.scrollTo(0,document.body.scrollHeight);
+}
 /* Gist 設定 */
 const ghmsg=(t,e)=>{$('#ghst').innerHTML=e?'<span class="err">'+esc(t)+'</span>':esc(t)};
 $('#ghtok').value=ls.get('oc_gh_tok','');$('#ghpw').value=ls.get('oc_gh_pw','');
