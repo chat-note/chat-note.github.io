@@ -36,6 +36,7 @@ input,select,textarea{width:100%;font:inherit;padding:11px;border:1px solid var(
 .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px}
 .msg{white-space:pre-wrap;padding:11px 13px;border-radius:10px;margin:0 0 10px;max-width:94%;background:var(--card);border:1px solid var(--bd);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .msg.me{background:var(--me);margin-left:auto;border-color:transparent}
+.msg a{color:var(--acc);text-decoration:underline;overflow-wrap:anywhere;word-break:break-all;-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}
 .msg.tx{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .selitem{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .selitem details>*:not(summary){-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
@@ -161,7 +162,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-h</small></span></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-i</small></span></header>
 <section id="p-learn">
  <div class="mut gdt" style="margin:0 0 6px"></div>
  <div id="chat"></div>
@@ -286,6 +287,18 @@ const EFF_CID=(()=>{try{return (new URLSearchParams(location.search).get('cid')|
 const ls={get(k,d){try{const v=localStorage.getItem(k);if(k==='oc_gd_cid'&&!v&&EFF_CID)return EFF_CID;return v===null?d:v}catch(e){return k==='oc_gd_cid'&&EFF_CID?EFF_CID:d}},set(k,v){try{localStorage.setItem(k,v);if(SK.includes(k)){localStorage.setItem('oc_mod',String(Date.now()));if(window.schedPush)window.schedPush()}return true}catch(e){return false}}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const tex=t=>String(t==null?'':t).replace(/\$/g,'');
+/* 把（已 esc 的）文字裡的網址變成可點的連結：只認 http/https，新分頁開啟 */
+const linkify=h=>h.replace(/https?:\/\/[A-Za-z0-9\-._~:\/?#@!$&*+,;=%()\[\]]+/g,m=>{
+  let u=m.replace(/&(lt|gt|quot);[\s\S]*$/,''),tail=m.slice(u.length),end='';
+  for(;;){
+    if(u.endsWith('&amp;'))break;
+    const c=u.slice(-1);
+    if('.,:;!?*'.includes(c)||(c===')'&&u.split('(').length<u.split(')').length)||(c===']'&&u.split('[').length<u.split(']').length)){end=c+end;u=u.slice(0,-1)}
+    else break;
+  }
+  if(!/^https?:\/\/[^\/?#]+/.test(u)||u.length<=10)return m;
+  return '<a href="'+u+'" target="_blank" rel="noopener noreferrer">'+u+'</a>'+end+tail;
+});
 const J=(k,d)=>{try{return JSON.parse(ls.get(k,''))||d}catch(e){return d}};
 function stamp(k,v){
   const old=J(k,[]),om=new Map(old.map(x=>[x.id,x])),now=Date.now(),ids=new Set(v.map(x=>x.id)),D=J('oc_dels',{}),cmp=x=>JSON.stringify({...x,mt:0});
@@ -523,8 +536,8 @@ function render(noScroll){
     const lost=h.role==='user'&&h.parts.some(p=>p.text===PHT);
     const ab=lost?'<div class="act"><button data-m="rl" data-i="'+i+'">重新讀取</button></div>':t?'<div class="act"><button data-m="cp" data-i="'+i+'">複製</button><button data-m="sh" data-i="'+i+'">分享</button><button data-m="qt" data-i="'+i+'">引用</button>'+(h.role==='user'?'<button data-m="ed" data-i="'+i+'">編輯</button>':'<button data-m="fd" data-i="'+i+'">檢索筆記本</button>')+'<button data-m="sv" data-i="'+i+'">存成筆記</button><button data-m="ai" data-i="'+i+'">AI筆記</button><button data-m="rg" data-i="'+i+'">重整</button></div>':'';
     const cls=S.sel.has(i)?' sel':'';
-    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t)+'</span>'+ab+tm+'</div>';
-    return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+esc(tex(t))+'</span>'+mk(h)+ab+tm+'</div>';
+    if(h.role==='user')return '<div class="msg me'+cls+'" data-idx="'+i+'">'+(img?'<img class="pv" data-z="'+i+'" style="cursor:zoom-in" src="data:image/jpeg;base64,'+img.inline_data.data+'">':'')+(h.parts.some(p=>p.inline_data&&p.inline_data.mime_type==='application/pdf')?'<div class="mut">📎 PDF 附件</div>':'')+'<span class="mt">'+linkify(esc(t.length>6000?t.slice(0,6000)+'…（已截斷顯示）':t))+'</span>'+ab+tm+'</div>';
+    return '<div class="msg'+cls+'" data-idx="'+i+'">'+'<span class="mt">'+linkify(esc(tex(t)))+'</span>'+mk(h)+ab+tm+'</div>';
   }).join('');
   markSel();
   if(!noScroll)window.scrollTo(0,document.body.scrollHeight);
@@ -747,7 +760,7 @@ let LP=null,LP2=null,LPF=false,LPX=0,LPY=0;
 const chat=$('#chat');
 const vib=n=>{if(navigator.vibrate)try{navigator.vibrate(n)}catch(x){}};
 chat.addEventListener('pointerdown',e=>{
-  const m=e.target.closest('.msg');if(!m||e.target.closest('button,.tag')||m.classList.contains('tx'))return;
+  const m=e.target.closest('.msg');if(!m||e.target.closest('button,.tag,a')||m.classList.contains('tx'))return;
     LPX=e.clientX;LPY=e.clientY;clearTimeout(LP);clearTimeout(LP2);
   if(e.target.closest('img.pv')){LP=setTimeout(()=>{LPF=true;toggleSel(+m.dataset.idx,true);vib(30)},700);return}
   LP=setTimeout(()=>{LPF=true;txtMode(m,LPX,LPY)},1000);
@@ -792,7 +805,7 @@ async function copyText(t){S.clip=t;try{await navigator.clipboard.writeText(t);r
 $('#selcp').onclick=async e=>{const t=S.snip||bodyOf(selIdx());if(!t)return;flash(e.target,(await copyText(t))?'已複製':'複製失敗')};
 $('#selsh').onclick=()=>{const t=S.snip||bodyOf(selIdx());if(t)shareOut('Chatnote',t)};
 $('#selps').onclick=async()=>{let t='';try{t=await navigator.clipboard.readText()}catch(e){}if(!t)t=S.clip;if(!t)return;const q=$('#q'),a=q.selectionStart==null?q.value.length:q.selectionStart,b=q.selectionEnd==null?a:q.selectionEnd;q.value=q.value.slice(0,a)+t+q.value.slice(b);q.focus();q.selectionStart=q.selectionEnd=a+t.length;autoH();updSend()};
-chat.addEventListener('contextmenu',e=>{if(e.target.closest('.msg:not(.tx)'))e.preventDefault()});
+chat.addEventListener('contextmenu',e=>{if(e.target.closest('.msg:not(.tx)')&&!e.target.closest('a'))e.preventDefault()});
 chat.addEventListener('click',e=>{
   if(LPF){LPF=false;return}
   const z=e.target.closest('img[data-z]');if(z&&!S.sel.size&&!S.snip){zoomChat(+z.dataset.z);return}
