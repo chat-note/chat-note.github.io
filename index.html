@@ -761,8 +761,8 @@ $('#hlist').onclick=e=>{
   const t=e.target.closest('[data-h]');if(!t)return;
   const a=t.dataset.h,i=t.dataset.i;
   if(a==='open'){mnuClose();document.querySelector('nav button[data-t="learn"]').click();loadChat(i);if(!S.busy)window.scrollTo(0,document.body.scrollHeight)}
-  else if(a==='del'){if(!confirm('刪除這個聊天紀錄？'))return;sv('oc_chats',chats().filter(x=>x.id!==i));if(i===S.cid)S.cid=null;drawHist()}
-  else if(a==='clr'){if(!confirm('清空全部聊天紀錄？無法復原。'))return;sv('oc_chats',[]);S.cid=null;drawHist()}
+  else if(a==='del'){if(!confirm('刪除這個聊天紀錄？'))return;cdel([i]);sv('oc_chats',chats().filter(x=>x.id!==i));if(i===S.cid)S.cid=null;drawHist()}
+  else if(a==='clr'){if(!confirm('清空全部聊天紀錄？無法復原。'))return;cdel(chats().map(x=>x.id));sv('oc_chats',[]);S.cid=null;drawHist()}
 };
 
 /* ===== 訊息選取（長按複選） ===== */
@@ -1662,11 +1662,13 @@ async function dec(txt,pw){
   const j=JSON.parse(txt),k=await dk(pw,fromB(j.s));
   return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB(j.i)},k,fromB(j.d))));
 }
-const mergeChats=r=>{try{const R=JSON.parse(r),m=new Map(chats().map(c=>[c.id,c]));R.forEach(c=>{const o=m.get(c.id);if(!o||c.ts>o.ts)m.set(c.id,c)});return JSON.stringify([...m.values()].sort((a,b)=>b.ts-a.ts).slice(0,50))}catch(e){return JSON.stringify(chats())}};
+const CD=()=>J('oc_cdels',{});
+const cdel=ids=>{const D=CD(),t=Date.now();ids.forEach(i=>{D[i]=t});try{localStorage.setItem('oc_cdels',JSON.stringify(D))}catch(e){}};
+const mergeChats=(r,RD)=>{try{const R=r?JSON.parse(r):[],D=CD();Object.keys(RD||{}).forEach(k=>{D[k]=Math.max(D[k]||0,RD[k])});const m=new Map(chats().map(c=>[c.id,c]));R.forEach(c=>{const o=m.get(c.id);if(!o||c.ts>o.ts)m.set(c.id,c)});const now=Date.now(),out=[...m.values()].filter(c=>!(D[c.id]&&D[c.id]>=c.ts));Object.keys(D).forEach(k=>{if(now-D[k]>60*864e5)delete D[k]});localStorage.setItem('oc_cdels',JSON.stringify(D));return JSON.stringify(out.sort((a,b)=>b.ts-a.ts).slice(0,50))}catch(e){return JSON.stringify(chats())}};
 const slimChats=t=>{try{return JSON.stringify(JSON.parse(t).map(c=>({...c,thumb:null,hist:c.hist.map(h=>({...h,parts:h.parts.map(p=>p.inline_data?{text:'（圖片僅存在原裝置）'}:p)}))})))}catch(e){return t}};
 function applyRemote(p){
   try{
-    SK.forEach(k=>{if(k==='oc_chats'){if(p.data[k]!==undefined)localStorage.setItem(k,mergeChats(p.data[k]));return}if(p.data[k]!==undefined)localStorage.setItem(k,p.data[k]);else if(!/^oc_gd_/.test(k))localStorage.removeItem(k)});
+    SK.forEach(k=>{if(k==='oc_chats'){if(p.data[k]!==undefined)localStorage.setItem(k,mergeChats(p.data[k],p.data.oc_cdels?JSON.parse(p.data.oc_cdels):null));return}if(p.data[k]!==undefined)localStorage.setItem(k,p.data[k]);else if(!/^oc_gd_/.test(k))localStorage.removeItem(k)});
     ['oc_book','oc_ess'].forEach(k=>{if(p.data[k]!==undefined)localStorage.setItem(k,p.data[k])});
     localStorage.setItem('oc_sync',String(p.ts));localStorage.setItem('oc_mod',String(p.ts));
   }catch(e){}
@@ -2145,7 +2147,7 @@ async function gdSync(silent){
     const locM={...((R&&R.loc)||{}),...LOC()};
     localStorage.setItem('oc_gd_loc',JSON.stringify(locM));
     let out,sig;
-    if(txt){const T=mergeText(R);out={v:2,...T,loc:locM,acc:accOut(),gh:GHX};sig=x=>JSON.stringify([x.notes,x.folds,x.dels,x.chats,x.apis,x.loc,x.acc,x.gh]);changed=!R||R.v!==2||sig(out)!==sig(R)}
+    if(txt){const T=mergeText(R);out={v:2,...T,loc:locM,acc:accOut(),gh:GHX};sig=x=>JSON.stringify([x.notes,x.folds,x.dels,x.chats,x.cdels,x.apis,x.loc,x.acc,x.gh]);changed=!R||R.v!==2||sig(out)!==sig(R)}
     else{out={v:3,loc:locM,acc:accOut(),gh:GHX};sig=x=>JSON.stringify([x.loc,x.acc,x.gh]);changed=!R||R.v!==3||sig(out)!==sig(R)}
     if(changed&&nid&&tr<2&&await gdVer(nid)!==ver0)continue;
     if(changed){out.ts=Date.now();await gdPutF(fid,'notes.json',JSON.stringify(out),nid)}
@@ -2218,12 +2220,12 @@ function mergeText(R){
   const a=mergeBy(notes(),(R&&R.notes)||[],J('oc_dels',{}),(R&&R.dels)||{});
   const b=mergeBy(folds(),(R&&R.folds)||[],a.dels,{});
   const nl=a.list.sort((x,y)=>x.id<y.id?1:-1);
-  const chM=R&&R.chats?mergeChats(R.chats):JSON.stringify(chats());
+  const chM=mergeChats(R&&R.chats,R&&R.cdels);
   const ap=new Map();[...pa(R&&R.apis),...apis()].forEach(x=>ap.set(x.id,x));const apM=[...ap.values()];
   localStorage.setItem('oc_notes',JSON.stringify(nl));localStorage.setItem('oc_fold',JSON.stringify(b.list));localStorage.setItem('oc_dels',JSON.stringify(b.dels));
   localStorage.setItem('oc_chats',chM);
   if(apM.length)localStorage.setItem('oc_apis',JSON.stringify(apM));
-  return{notes:nl,folds:b.list,dels:b.dels,chats:slimChats(chM),apis:JSON.stringify(apM)};
+  return{notes:nl,folds:b.list,dels:b.dels,chats:slimChats(chM),cdels:CD(),apis:JSON.stringify(apM)};
 }
 async function ghSync(silent){
   if(GHBUSY)return{msg:'',err:false,skip:true};
@@ -2239,7 +2241,7 @@ async function ghSync(silent){
         catch(e){if(e.st===404){id='';ls.set('oc_gh_id','')}else throw e}
       }
       const out={v:3,...mergeText(R)};
-      const sig=x=>JSON.stringify([x.notes,x.folds,x.dels,x.chats,x.apis]);
+      const sig=x=>JSON.stringify([x.notes,x.folds,x.dels,x.chats,x.cdels,x.apis]);
       changed=!R||sig(out)!==sig(R);
       if(changed){
         if(id&&tr<2&&await ghVer(id)!==ver0)continue;
