@@ -432,9 +432,10 @@ const SYS=`你是自學者的家教，學生可能問任何科目（語文、理
 【文法解析】：這是最重要的部分。拆解句子結構（主詞、動詞、受詞、子句），說明時態、語態、關係子句、連接詞、準動詞等重點文法，每個文法點都要說明規則與「為什麼這裡要這樣用」；若是選擇題，逐一說明各選項的文法對錯。
 【寫作解析】：說明值得學起來的用字、搭配詞（collocation）、句型與連接方式，並提供 1 到 2 個可套用在自己寫作的替換說法或仿寫例句；若是學生自己寫的英文，先列出修正後的版本，再逐點說明哪裡錯、為什麼要改、怎麼寫更自然。
 如果是學生針對學習內容說出自己的想法或理解（不是單純詢問資訊）：指出哪裡正確、哪裡有落差，提示關鍵線索引導他自己推。
+圖片可能是橫拍或被旋轉過的（文字可能是橫躺或倒著的），請自行判斷正確的閱讀方向再回答，不要因為方向不對就說看不清楚。
 ${FMT}
 ${META}`;
-const SYSO=`你是優惠整理助手，一律使用繁體中文，不要使用 LaTeX 或 $。收到圖片（優惠券、QR code、活動海報、截圖）時，直接整理出：店家或品牌、優惠內容、使用期限、使用條件與限制、使用方式；不要寫「我看到的內容」這類開頭，也不要複述你看到了什麼，直接給整理結果。看不清楚或無法確定的地方明說「不確定」，不要猜。QR code 本身你無法掃描，只能讀旁邊的文字。
+const SYSO=`你是優惠整理助手，一律使用繁體中文，不要使用 LaTeX 或 $。收到圖片（優惠券、QR code、活動海報、截圖）時，直接整理出：店家或品牌、優惠內容、使用期限、使用條件與限制、使用方式；不要寫「我看到的內容」這類開頭，也不要複述你看到了什麼，直接給整理結果。看不清楚或無法確定的地方明說「不確定」，不要猜。QR code 本身你無法掃描，只能讀旁邊的文字。圖片可能是橫拍或被旋轉過的，請自行判斷正確的閱讀方向。
 ${FMT}
 ${META}`;
 const SYS2='你是筆記整理助手。使用繁體中文，不要用 LaTeX 或 $ 符號。化學式、離子電荷和數學上下標，一律直接用 Unicode 上下標字元書寫（例如 H₂O、N₂O、CO₃²⁻、R−COO⁻、x²、10⁻³），不要用 LaTeX（不要 $ 符號、_、^），也不要用 <sub>、<sup> 標籤。';
@@ -541,7 +542,7 @@ async function gen0(contents,system,o){
   }finally{clearTimeout(wd)}
 }
 const call=(contents,system,json)=>gen(contents,system,{json:!!json});
-function shrink(file,max,q){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height));const c=document.createElement('canvas');c.width=Math.round(i.width*s);c.height=Math.round(i.height*s);c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q))};i.onerror=rej;i.src=URL.createObjectURL(file)})}
+function shrink(file,max,q,rot){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,max/Math.max(i.width,i.height)),w=Math.round(i.width*s),h=Math.round(i.height*s),r=(((rot||0)%360)+360)%360,sw=r===90||r===270,c=document.createElement('canvas');c.width=sw?h:w;c.height=sw?w:h;const x=c.getContext('2d');x.translate(c.width/2,c.height/2);x.rotate(r*Math.PI/180);x.drawImage(i,-w/2,-h/2,w,h);res(c.toDataURL('image/jpeg',q))};i.onerror=rej;i.src=URL.createObjectURL(file)})}
 
 /* ===== 資料夾工具 ===== */
 function folderOpts(k,sel){
@@ -658,8 +659,11 @@ const xRef=r=>(r||document).querySelectorAll('.xw').forEach(w=>{const f=w.queryS
 const updSend=()=>{xRef($('#dock'));$('#send').classList.toggle('g',!!S.busy);$('#send').textContent=S.busy?'取消':($('#q').value.trim()||S.att.length)?'送出':'拍照'};
 $('#q').addEventListener('input',()=>{autoH();updSend()});
 $('#q').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();if(!S.busy)$('#send').click()}});
-function drawAtt(){const b=$('#attbox');b.classList.toggle('hide',!S.att.length);b.innerHTML=S.att.map((a,i)=>'<span class="tag" style="margin:0;border-color:var(--acc);color:var(--fg)">'+(a.kind==='img'?'🖼 ':'📎 ')+esc(a.name.slice(0,18))+' <b data-ax="'+i+'" style="cursor:pointer;padding:0 4px">✕</b></span>').join('');updSend()}
-$('#attbox').onclick=e=>{const i=e.target.dataset.ax;if(i===undefined)return;S.att.splice(+i,1);drawAtt()};
+function drawAtt(){const b=$('#attbox');b.classList.toggle('hide',!S.att.length);b.innerHTML=S.att.map((a,i)=>'<span class="tag" style="margin:0;border-color:var(--acc);color:var(--fg);display:inline-flex;align-items:center;gap:4px">'+(a.kind==='img'?'<img src="data:image/jpeg;base64,'+a.part.inline_data.data+'" style="height:34px;max-width:60px;object-fit:contain;border-radius:4px">':'📎 ')+esc(a.name.slice(0,14))+(a.kind==='img'?' <b data-ar="'+i+'" style="cursor:pointer;padding:0 6px;font-size:18px" title="旋轉 90°">↻</b>':'')+' <b data-ax="'+i+'" style="cursor:pointer;padding:0 4px">✕</b></span>').join('');updSend()}
+$('#attbox').onclick=async e=>{
+  const r=e.target.dataset.ar;
+  if(r!==undefined){const a=S.att[+r];if(!a||!a.f)return;a.rot=((a.rot||0)+90)%360;const u=await shrink(a.f,1100,.75,a.rot);a.part.inline_data.data=u.split(',')[1];drawAtt();return}
+  const i=e.target.dataset.ax;if(i===undefined)return;S.att.splice(+i,1);drawAtt()};
 async function stage(fs){
   for(const f of fs){
     if(!f)continue;
@@ -692,7 +696,7 @@ $('#send').onclick=async()=>{
     const tt=at.filter(a=>a.text).map(a=>a.text).join('\n\n');if(tt)tx+=(tx?'\n\n':'')+tt;
     at.forEach(a=>{if(a.part)m.parts.push(a.part)});
     const im=at.find(a=>a.kind==='img');
-    if(im){S.start=S.hist.length;S.pend=null;S.thumb=await shrink(im.f,S.mode==='o'?520:160,S.mode==='o'?.6:.7);const oid=uid();if(await imgPut(oid,await shrink(im.f,2400,.88)))m.oid=oid}
+    if(im){S.start=S.hist.length;S.pend=null;S.thumb=await shrink(im.f,S.mode==='o'?520:160,S.mode==='o'?.6:.7,im.rot);const oid=uid();if(await imgPut(oid,await shrink(im.f,2400,.88,im.rot)))m.oid=oid}
     m.parts.push({text:tx||(im?(S.mode==='o'?'請整理這張圖裡的優惠。':'請解析這張圖。'):'請解析這份附件。')});
     clearQuote();$('#q').value='';autoH();S.att=[];drawAtt();
     S.hist.push(m);render();saveChat();ask();
