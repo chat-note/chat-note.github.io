@@ -156,6 +156,8 @@ body.kbo #dock{padding-bottom:8px}
 #qcard{margin:12px 0 0;border-radius:18px;padding:14px 16px}
 #qcard .qt{font-size:16px;font-weight:600;margin:0 0 8px;display:flex;align-items:center;gap:6px}
 .qt svg{width:22px;height:22px;flex:none}
+.dh{flex:none;display:flex;align-items:center;justify-content:center;width:30px;margin:-6px 0 -6px -8px;color:var(--mut);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.selitem.dragging{position:relative;z-index:5;box-shadow:0 8px 22px rgba(0,0,0,.28);opacity:.92;outline:2px solid var(--acc)}
 #qcard .qb{height:8px;border-radius:99px;background:var(--bd);overflow:hidden;margin:0 0 8px}
 #qcard .qf{height:100%;border-radius:99px;background:var(--acc);min-width:8px}
 #qcard .ql{display:flex;gap:18px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
@@ -352,7 +354,8 @@ const imgPut=async(id,v)=>{try{const d=await idb();return await new Promise(res=
 const imgGet=async id=>{if(!id)return null;try{const d=await idb();return await new Promise(res=>{const q=d.transaction('i').objectStore('i').get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}catch(e){return null}};
 const imgDel=async id=>{if(!id)return;try{const d=await idb();d.transaction('i','readwrite').objectStore('i').delete(id)}catch(e){}};
 async function gcAll(){try{const d=await idb();const keep=new Set([...notes().map(n=>n.iid),...notes().flatMap(n=>(n.files||[]).map(f=>f.iid)),...(ED&&ED.files?ED.files.map(f=>f.iid):[]),...chats().flatMap(c=>c.hist.map(h=>h.oid)),...S.hist.map(h=>h.oid)].filter(Boolean));const q=d.transaction('i').objectStore('i').getAllKeys();q.onsuccess=()=>q.result.forEach(k=>{if(!keep.has(k))imgDel(k)})}catch(e){}}
-const notes=()=>J('oc_notes',[]),folds=()=>J('oc_fold',[]),last=()=>J('oc_last',{});
+const soKey=n=>n.so==null?-1e15:n.so,foKey=n=>n.so==null?1e15:n.so;
+const notes=()=>J('oc_notes',[]),folds=()=>J('oc_fold',[]).sort((a,b)=>foKey(a)-foKey(b)),last=()=>J('oc_last',{});
 const clean=a=>[...new Set((a||[]).map(k=>String(k).replace(/^#/,'').trim()).filter(Boolean))];
 const jparse=r=>{r=r.replace(/```json|```/g,'');const a=r.indexOf('{'),b=r.lastIndexOf('}');return JSON.parse(a>=0&&b>a?r.slice(a,b+1):r.trim())};
 const errH=e=>'<span class="err">'+esc(e.message.includes('JSON')?'AI 回傳格式有誤，請再按一次':e.message)+'</span>';
@@ -1119,20 +1122,21 @@ const shareNote=id=>shareNotes([id]);
 /* ===== 筆記本／AI 摘要（共用） ===== */
 const TT={n:'筆記本',e:'AI 摘要'};
 ['n','e'].forEach(k=>{
-  $('#p-'+k).innerHTML='<div class="row" style="margin-bottom:10px"><input id="s'+k+'" placeholder="搜尋標題、標籤、內容（可打 #關鍵字）" style="flex:1;min-width:0"></div><div class="mut gdt" style="margin:0 0 6px"></div><p class="mut" style="margin:0 0 8px">長按項目 1 秒可選取（選取後點一下可加選或取消），下方會跳出可用的操作。</p><div id="h'+k+'"></div><div id="ed'+k+'"></div><div id="ap'+k+'"></div><div id="d'+k+'"></div><div id="nsp'+k+'"></div><div id="nb'+k+'" class="nbar hide"></div>';
+  $('#p-'+k).innerHTML='<div class="row" style="margin-bottom:10px"><input id="s'+k+'" placeholder="搜尋標題、標籤、內容（可打 #關鍵字）" style="flex:1;min-width:0"></div><div class="mut gdt" style="margin:0 0 6px"></div><p class="mut" style="margin:0 0 8px">長按項目 1 秒可選取（選取後點一下可加選或取消），下方會跳出可用的操作。按住左邊的 ⋮⋮ 上下拖曳可調整順序。</p><div id="h'+k+'"></div><div id="ed'+k+'"></div><div id="ap'+k+'"></div><div id="d'+k+'"></div><div id="nsp'+k+'"></div><div id="nb'+k+'" class="nbar hide"></div>';
   $('#s'+k).oninput=()=>draw(k);
 });
-const soKey=n=>n.so==null?-1e15:n.so;
+const GRIP='<span class="dh" aria-label="拖曳排序" title="按住上下拖曳排序"><svg viewBox="0 0 12 18" width="12" height="18" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="3" cy="15" r="1.5"/><circle cx="9" cy="15" r="1.5"/></g></svg></span>';
 function draw(k){
   const q=$('#s'+k).value.trim().replace(/^#/,'').toLowerCase();
   let fid=V[k];
   const F=folds().filter(x=>x.k===k),N=notes().filter(x=>x.k===k).sort((a,b)=>soKey(a)-soKey(b)),cf=F.find(x=>x.id===fid);
   if(fid&&!cf)fid=V[k]='';
+  const dgF=!fid&&!q,dgN=!!fid&&!q;
   const fn=id=>(F.find(x=>x.id===id)||{name:'?'}).name;
   const qs=q.split(/[\s,，、#]+/).filter(Boolean);
   const hit=n=>{const h=(tex(n.title)+' '+tex(n.body)+' '+(n.kws||[]).join(' ')+' '+fn(n.fid)).toLowerCase();return qs.every(w=>h.includes(w))};
-  const fc=f=>'<div class="it selitem" data-f="'+f.id+'"><div data-a="of" data-i="'+f.id+'" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b class="tt">📁 '+esc(f.name)+'</b><br><span class="mut">'+N.filter(n=>n.fid===f.id).length+' 則</span></span><span>›</span></div></div>';
-  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px"><div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div class="nbd" style="white-space:pre-wrap;margin:8px 0">'+linkify(esc(tex(n.body)))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button><button data-a="shn" data-i="'+n.id+'">分享</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
+  const fc=f=>'<div class="it selitem" data-f="'+f.id+'"'+(dgF?' style="display:flex;align-items:center;gap:6px"':'')+'>'+(dgF?GRIP:'')+'<div data-a="of" data-i="'+f.id+'" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px'+(dgF?';flex:1;min-width:0':'')+'"><span><b class="tt">📁 '+esc(f.name)+'</b><br><span class="mut">'+N.filter(n=>n.fid===f.id).length+' 則</span></span><span>›</span></div></div>';
+  const list=(a,sf)=>a.length?a.map(n=>'<div class="it selitem" data-c="'+n.id+'"><div style="display:flex;gap:10px">'+(dgN?GRIP:'')+'<div style="flex:1;min-width:0"><div class="nd">'+ntime(n)+'</div><b class="tt nt">'+esc(tex(n.title))+'</b>'+((n.files||[]).some(f=>(f.type||'').startsWith('image/'))?'<div class="row" style="gap:6px;margin:6px 0 0">'+n.files.map((f,j)=>(f.type||'').startsWith('image/')?'<img data-lz="'+f.iid+'" data-a="zoomf" data-i="'+n.id+'" data-j="'+j+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:zoom-in;background:var(--bg)">':'').join('')+'</div>':'')+'<div style="margin-top:5px">'+(sf?'<span class="tag">📁 '+esc(fn(n.fid))+'</span> ':'')+(n.ai?'<span class="tag">AI摘要</span> ':'')+kt(n.kws)+'</div></div></div><details><summary>查看內容</summary>'+FB(n)+(n.img?'<img class="pv" src="'+n.img+'" style="margin-top:8px;cursor:zoom-in" data-a="zoom" data-i="'+n.id+'"><div class="mut" style="margin:-4px 0 8px">點圖片可看原圖</div>':'')+'<div class="nbd" style="white-space:pre-wrap;margin:8px 0">'+linkify(esc(tex(n.body)))+'</div><div class="mut">'+esc(n.date||'')+'</div><div class="act"><button data-a="en" data-i="'+n.id+'">編輯內容</button><button data-a="shn" data-i="'+n.id+'">分享</button></div></details></div>').join(''):'<p class="mut">沒有符合的筆記。</p>';
   const bar='';
   let h,d;
   if(fid){
@@ -1148,22 +1152,62 @@ function draw(k){
   }
   $('#h'+k).innerHTML=h;$('#d'+k).innerHTML=d;nbar(k);lazyThumbs(k);
 }
-/* 上移／下移選取的筆記：在每則筆記存排序值 so（會跟著同步），沒有 so 的新筆記排最前面 */
+/* 排序：每則筆記／資料夾存排序值 so（會跟著同步）。筆記沒有 so＝新筆記排最前面，資料夾沒有 so＝新資料夾排最後面 */
+function setOrder(kind,ids){
+  const key=kind==='f'?'oc_fold':'oc_notes',all=kind==='f'?folds():notes(),pos=new Map(ids.map((id,i)=>[id,i]));let ch=0;
+  const out=all.map(x=>{const q=pos.get(x.id);if(q===undefined||x.so===q)return x;ch++;return{...x,so:q}});
+  if(ch)sv(key,out);return ch;
+}
 function moveNotes(k,dir){
-  const fid=V[k];if(!fid)return;
-  const sel=new Set([...document.querySelectorAll('#p-'+k+' .selitem.sel[data-c]')].map(c=>c.dataset.c));
-  if(!sel.size)return;
-  const all=notes(),ids=all.filter(x=>x.k===k&&x.fid===fid).sort((a,b)=>soKey(a)-soKey(b)).map(x=>x.id);
+  if($('#s'+k).value.trim())return;
+  const P='#p-'+k+' .selitem.sel',sf=[...document.querySelectorAll(P+'[data-f]')].map(c=>c.dataset.f),sc=[...document.querySelectorAll(P+'[data-c]')].map(c=>c.dataset.c);
+  let kind,sel,ids;
+  if(sf.length&&!sc.length&&!V[k]){kind='f';sel=new Set(sf);ids=folds().filter(x=>x.k===k).map(x=>x.id)}
+  else if(sc.length&&!sf.length&&V[k]){kind='c';sel=new Set(sc);ids=notes().filter(x=>x.k===k&&x.fid===V[k]).sort((a,b)=>soKey(a)-soKey(b)).map(x=>x.id)}
+  else return;
   if(dir<0){for(let i=1;i<ids.length;i++)if(sel.has(ids[i])&&!sel.has(ids[i-1]))[ids[i-1],ids[i]]=[ids[i],ids[i-1]]}
   else{for(let i=ids.length-2;i>=0;i--)if(sel.has(ids[i])&&!sel.has(ids[i+1]))[ids[i],ids[i+1]]=[ids[i+1],ids[i]]}
-  const pos=new Map(ids.map((id,i)=>[id,i]));let ch=0;
-  const out=all.map(x=>{const q=pos.get(x.id);if(q===undefined||x.so===q)return x;ch++;return{...x,so:q}});
-  if(!ch){vib(20);return}
-  sv('oc_notes',out);draw(k);
-  let first=null;
-  sel.forEach(id=>{const el=document.querySelector('#d'+k+' [data-c="'+id+'"]');if(el){el.classList.add('sel');if(!first)first=el}});
+  if(!setOrder(kind,ids)){vib(20);return}
+  draw(k);
+  const at=kind==='f'?'data-f':'data-c';let first=null;
+  sel.forEach(id=>{const el=document.querySelector('#d'+k+' ['+at+'="'+id+'"]');if(el){el.classList.add('sel');if(!first)first=el}});
   nbar(k);if(first)first.scrollIntoView({block:'nearest'});
 }
+/* ===== 拖曳排序：按住左邊的把手上下拖 ===== */
+['n','e'].forEach(k=>{
+  const p=$('#p-'+k);let D=null,raf=0,ly=0;
+  const sibs=()=>[...D.box.children].filter(c=>c!==D.it&&c.classList.contains('selitem')&&(D.kind==='f'?c.dataset.f:c.dataset.c));
+  const place=()=>{
+    const s=sibs();let before=null;
+    for(const c of s){const r=c.getBoundingClientRect();if(ly<r.top+r.height/2){before=c;break}}
+    const ref=before||(s.length?s[s.length-1].nextSibling:null);
+    if(ref!==D.it&&ref!==D.it.nextSibling)D.box.insertBefore(D.it,ref);
+  };
+  const tick=()=>{
+    if(!D)return;const H=innerHeight;
+    if(ly<90)scrollBy(0,-Math.ceil((90-ly)/5));else if(ly>H-90)scrollBy(0,Math.ceil((ly-(H-90))/5));
+    place();raf=requestAnimationFrame(tick);
+  };
+  p.addEventListener('pointerdown',e=>{
+    const h=e.target.closest('.dh');if(!h||(e.pointerType==='mouse'&&e.button!==0))return;
+    const it=h.closest('.selitem');if(!it)return;
+    e.preventDefault();
+    D={it,box:it.parentElement,kind:it.dataset.f?'f':'c',pid:e.pointerId};ly=e.clientY;
+    try{p.setPointerCapture(e.pointerId)}catch(x){}
+    it.classList.add('dragging');vib(15);raf=requestAnimationFrame(tick);
+  });
+  p.addEventListener('pointermove',e=>{if(D&&e.pointerId===D.pid){ly=e.clientY;e.preventDefault()}});
+  const end=e=>{
+    if(!D||e.pointerId!==D.pid)return;
+    cancelAnimationFrame(raf);const d=D;D=null;d.it.classList.remove('dragging');
+    try{p.releasePointerCapture(e.pointerId)}catch(x){}
+    if(e.type==='pointercancel'){draw(k);return}
+    const ids=[...d.box.children].filter(c=>c.classList.contains('selitem')).map(c=>c.dataset.f||c.dataset.c);
+    if(setOrder(d.kind,ids))vib(15);
+  };
+  p.addEventListener('pointerup',end);p.addEventListener('pointercancel',end);
+  p.addEventListener('contextmenu',e=>{if(e.target.closest('.dh'))e.preventDefault()});
+});
 function nbar(k){
   const p=$('#p-'+k),b=$('#nb'+k),sp=$('#nsp'+k);if(!b)return;
   const cf=p.querySelectorAll('.selitem.sel[data-f]').length,cn=p.querySelectorAll('.selitem.sel[data-c]').length,n=cf+cn,tot=p.querySelectorAll('.selitem').length;
@@ -1171,7 +1215,7 @@ function nbar(k){
   const B=(a,t,x)=>'<button class="b g sm" data-a="'+a+'"'+(x||'')+'>'+t+'</button>';
   b.innerHTML='<div class="dk"><div class="row" style="margin:0"><span class="mut" style="width:100%">已選取 '+(cf?cf+' 個資料夾':'')+(cf&&cn?'、':'')+(cn?cn+' 則筆記':'')+'</span>'
     +(n<tot?B('sa','全選'):'')+B('sc','取消選取')
-    +(cn&&!cf&&V[k]&&!$('#s'+k).value.trim()?B('mu','↑ 上移')+B('md','↓ 下移'):'')
+    +(((cn&&!cf&&V[k])||(cf&&!cn&&!V[k]))&&!$('#s'+k).value.trim()?B('mu','↑ 上移')+B('md','↓ 下移'):'')
     +(n===1?B('rn',cn?'編輯標題':'改名'):'')+(n===1&&cn===1?B('eb','編輯內容'):'')
     +(cn&&!cf?B('shs','分享'):'')+(cn&&!cf?B('ai',k==='n'?(cn===1?'AI摘要':'AI整併摘要'):'AI 整併'):'')
     +B('dl','刪除',' style="color:var(--warn);border-color:var(--warn)"')+'</div></div>';
@@ -1354,7 +1398,7 @@ async function zoomImg(nid){showGal(nid,0)}
 
 ['n','e'].forEach(k=>{
   const p=$('#p-'+k);let T=null,F=false,X=0,Y=0;
-  const skip=e=>e.target.closest('button,input,select,textarea,label')||(e.target.closest('details')&&!e.target.closest('summary'));
+  const skip=e=>e.target.closest('button,input,select,textarea,label,.dh')||(e.target.closest('details')&&!e.target.closest('summary'));
   p.addEventListener('pointerdown',e=>{
     const it=e.target.closest('.selitem');if(!it||skip(e))return;
     X=e.clientX;Y=e.clientY;clearTimeout(T);
