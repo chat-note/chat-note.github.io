@@ -164,7 +164,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-l</small></span></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-m</small></span></header>
 <section id="p-learn">
  <div class="mut gdt" style="margin:0 0 6px"></div>
  <div id="chat"></div>
@@ -302,6 +302,21 @@ const mapAll=(s,M)=>{let o='';for(const c of String(s).replace(/[\s\u00a0]+/g,''
 const texMath=b=>b.replace(/\\(?:mathrm|textrm|text|mathbf|ce)\{([^{}]*)\}/g,'$1')
   .replace(/_\{([^{}]*)\}|_([0-9+\-−])/g,(x,a,c)=>{const v=mapAll(a!=null?a:c,SUBM);return v==null?x:v})
   .replace(/\^\{([^{}]*)\}|\^([0-9+\-−])/g,(x,a,c)=>{const v=mapAll(a!=null?a:c,SUPM);return v==null?x:v});
+const texLite=b=>{
+  let s=String(b).replace(/\\(?:mathrm|textrm|text|mathbf|ce|operatorname)\s*\{([^{}]*)\}/g,(m,x)=>'\u0001'+x+'\u0002');
+  s=s.replace(/\\(?:left|right|big|Big|bigg|Bigg)(?![a-zA-Z])/g,'')
+     .replace(/\\%/g,'%').replace(/\\(?:rightarrow|to|longrightarrow)(?![a-zA-Z])/g,'→')
+     .replace(/\\(?:leftrightarrow)(?![a-zA-Z])/g,'↔').replace(/\\(?:rightleftharpoons|leftrightharpoons)(?![a-zA-Z])/g,'⇌')
+     .replace(/\\(?:leftarrow)(?![a-zA-Z])/g,'←').replace(/\\times(?![a-zA-Z])/g,'×').replace(/\\cdot(?![a-zA-Z])/g,'·')
+     .replace(/\\pm(?![a-zA-Z])/g,'±').replace(/\\approx(?![a-zA-Z])/g,'≈').replace(/\\(?:neq|ne)(?![a-zA-Z])/g,'≠')
+     .replace(/\\(?:ge|geq)(?![a-zA-Z])/g,'≥').replace(/\\(?:le|leq)(?![a-zA-Z])/g,'≤').replace(/\\Delta(?![a-zA-Z])/g,'Δ')
+     .replace(/\\delta(?![a-zA-Z])/g,'δ').replace(/\\(?:ldots|dots|cdots)(?![a-zA-Z])/g,'…')
+     .replace(/\\[,;:!]|\\ /g,'');
+  s=s.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,(m,x,y)=>(/^[\w.]+$/.test(x)?x:'('+x+')')+'/'+(/^[\w.]+$/.test(y)?y:'('+y+')'));
+  s=s.replace(/\s+/g,'');
+  s=texMath(s);
+  return s.replace(/[\u0001\u0002]/g,'').replace(/\{\}/g,'');
+};
 const tex=t=>String(t==null?'':t).replace(/\$([^$\n]{1,120})\$/g,(m,b)=>texMath(b)).replace(/\$/g,'');
 /* 把（已 esc 的）文字裡的網址變成可點的連結：只認 http/https，新分頁開啟 */
 const linkify=h=>h.replace(/https?:\/\/[A-Za-z0-9\-._~:\/?#@!$&*+,;=%()\[\]]+/g,m=>{
@@ -816,7 +831,7 @@ document.addEventListener('click',e=>{
   ['n','e'].forEach(k=>{const p=$('#p-'+k),c=p&&p.querySelectorAll('.selitem.sel');if(c&&c.length){c.forEach(x=>x.classList.remove('sel'));nbar(k)}});
 });
 /* ===== 貼上時保留上下標：從網頁複製 N<sub>2</sub>O、COO<sup>−</sup> 時，轉成 N₂O、COO⁻ ===== */
-const SUBRE=/<su[bp][\s>]|vertical-align\s*:\s*(sub|super)\b|<ms(ub|up|ubsup)[\s>]|<math[\s>]|class="[^"]*\b(katex|MathJax)\b|<mjx-container|class="(?:[^"]*\s)?su[bp](?:script)?(?:\s[^"]*)?"/i;
+const SUBRE=/<su[bp][\s>]|vertical-align\s*:\s*(sub|super)\b|<ms(ub|up|ubsup)[\s>]|<math[\s>]|class="[^"]*\b(katex|MathJax)\b|<mjx-container|data-math=|class="(?:[^"]*\s)?su[bp](?:script)?(?:\s[^"]*)?"/i;
 function mml(n){
   if(n.nodeType===3)return n.data.replace(/[\s\u00a0]+/g,'');
   if(n.nodeType!==1)return '';
@@ -836,13 +851,34 @@ function htmlToPlain(html){
   let out='';
   const nl=()=>{if(out&&!out.endsWith('\n')&&!out.endsWith('• '))out+='\n'};
   const walk=n=>{
-    if(n.nodeType===3){let t=n.data.replace(/[\s\u00a0]+/g,' ');if(out===''||out.endsWith('\n'))t=t.replace(/^ /,'');out+=t;return}
+    if(n.nodeType===3){let t=n.data.replace(/\u200b/g,'').replace(/[\s\u00a0]+/g,' ');if(out===''||out.endsWith('\n'))t=t.replace(/^ /,'');out+=t;return}
     if(n.nodeType!==1)return;
     const ln=n.localName.toLowerCase(),cl=n.classList;
     if(ln==='br'){out+='\n';return}
     if(ln==='math'){out+=mml(n);return}
-    if(cl.contains('katex')){const mm=n.querySelector('math');if(mm){out+=mml(mm);return}const an=n.querySelector('annotation');if(an){out+=texMath(an.textContent);return}}
-    if(cl.contains('katex-html'))return;
+    if(cl.contains('katex')){
+      /* 後備順序：MathML 有字 → TeX 原文 → 視覺版(katex-html) → 純文字；任何一層是空的就往下一層 */
+      const mm=n.querySelector('math');if(mm){const s=mml(mm);if(s.trim()){out+=s;return}}
+      const an=n.querySelector('annotation');if(an&&an.textContent.trim()){out+=texLite(an.textContent);return}
+      const st0=out.length;
+      n.childNodes.forEach(walk);
+      if(out.length===st0){const dm=n.closest('[data-math]'),x=dm?texLite(dm.getAttribute('data-math')):n.textContent.replace(/[\s\u00a0\u200b]+/g,'');out+=x}
+      return;
+    }
+    if(cl.contains('katex-mathml'))return;
+    if(cl.contains('msupsub')){
+      /* KaTeX 的視覺版：用 top＋pstrut 高度判斷是下標（>0）還是上標（<0） */
+      const vl=n.querySelector('.vlist'),sub=[],sup=[];
+      if(vl)[...vl.children].forEach(c=>{
+        const ts=/top\s*:\s*(-?[\d.]+)em/.exec(c.getAttribute('style')||'');if(!ts)return;
+        const ps=c.querySelector('.pstrut'),ph=ps?/height\s*:\s*(-?[\d.]+)em/.exec(ps.getAttribute('style')||''):null;
+        const shift=parseFloat(ts[1])+(ph?parseFloat(ph[1]):0);
+        const tx=c.textContent.replace(/[\s\u00a0\u200b]+/g,'');
+        (shift>0?sub:sup).push(tx);
+      });
+      const f=(x,M,m)=>{if(!x)return '';const v=mapAll(x,M);return v!=null?v:m+'('+x+')'};
+      out+=f(sub.join(''),SUBM,'_')+f(sup.join(''),SUPM,'^');return;
+    }
     if(ln==='mjx-container'){const mm=n.querySelector('math');out+=mm?mml(mm):(n.getAttribute('aria-label')||n.textContent);return}
     const st=(n.getAttribute('style')||'').toLowerCase();
     let m='',soft=false;
@@ -852,11 +888,23 @@ function htmlToPlain(html){
     if(m){const inner=n.textContent.replace(/[\s\u00a0]+/g,''),v=mapAll(inner,m==='sub'?SUBM:SUPM);out+=v!=null?v:soft?n.textContent.replace(/[\s\u00a0]+/g,' '):(m==='sub'?'_(':'^(')+inner+')';return}
     const b=BLK.test(ln);if(b)nl();
     if(ln==='li')out+='• ';
+    const st1=out.length;
     n.childNodes.forEach(walk);
+    if(out.length===st1&&n.hasAttribute('data-math'))out+=texLite(n.getAttribute('data-math'));
     if(b)nl();
   };
   walk(d.body);
   return out.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
+}
+function hdump(html){
+  let c='';
+  try{
+    const d=new DOMParser().parseFromString(html,'text/html'),q=s=>d.querySelectorAll(s).length;
+    c='\n\n結構計數：.katex='+q('.katex')+'、math='+q('math')+'、annotation='+q('annotation')+'、.msupsub='+q('.msupsub')+'、.katex-html='+q('.katex-html')+'、[data-math]='+q('[data-math]')+'、img='+q('img')+'、sub/sup='+q('sub,sup');
+  }catch(e){}
+  const bare=html.replace(/\s+style="[^"]*"/g,'').replace(/\s+_ng[\w-]*=""/g,'').replace(/\s+/g,' ');
+  const m=/katex|<math|data-math|msupsub|<sub|<sup/i.exec(bare),at=m?Math.max(0,m.index-200):0;
+  return c+'\n\n公式附近的 HTML（已去掉 style，共 '+bare.length+' 字，從第 '+at+' 字起 900 字）：\n'+bare.slice(at,at+900);
 }
 /* 貼上檢查：說明剪貼簿裡到底有什麼 */
 function pasteCheck(cd){
@@ -869,7 +917,7 @@ function pasteCheck(cd){
   if(/class="(?:[^"]*\s)?su[bp](?:script)?(?:\s[^"]*)?"/i.test(html))f.push('class 名稱為 sub/sup');
   if(/<img[\s>]/i.test(html))f.push('含圖片（公式可能是圖片，無法轉成文字）');
   const conv=SUBRE.test(html)?htmlToPlain(html):'';
-  return '剪貼簿格式：'+([...cd.types].join('、')||'（空）')+'\n偵測到：'+(f.length?f.join('、'):'沒有任何上下標資訊'+(html?'（來源有 HTML，但上下標沒有被標記出來）':'（來源只有純文字）'))+'\n\n純文字內容：\n'+plain.slice(0,300)+'\n\n轉換後會貼成：\n'+(conv||'（沒有可轉換的格式，會原樣貼上）').slice(0,300)+(html?'\n\nHTML 前 600 字：\n'+html.replace(/\s+/g,' ').slice(0,600):'');
+  return '剪貼簿格式：'+([...cd.types].join('、')||'（空）')+'\n偵測到：'+(f.length?f.join('、'):'沒有任何上下標資訊'+(html?'（來源有 HTML，但上下標沒有被標記出來）':'（來源只有純文字）'))+'\n\n純文字內容：\n'+plain.slice(0,300)+'\n\n轉換後會貼成：\n'+(conv||'（沒有可轉換的格式，會原樣貼上）').slice(0,300)+(html?hdump(html):'');
 }
 let PNOTED=false;
 function pasteNote(t){
