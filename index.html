@@ -117,6 +117,8 @@ nav button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .nd{font-size:12px;color:var(--mut);margin:0 0 4px}
 .nt{display:block;font-weight:700;padding:5px 9px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .it:has(details[open]) .nt{white-space:normal;overflow:visible}
+/* 沒有空格的長字串（網址、長串字母、一排橫線）也要換行，不能撐出框架 */
+.msg,.it,.it details,.it details div,.it .nt,.mbox [style*="pre-wrap"],[style*="pre-wrap"]{overflow-wrap:anywhere;word-break:break-word}
 
 /* 頂端列：三條線選單＋右側下拉；底部分頁列改由選單切換 */
 nav{display:none}
@@ -162,7 +164,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-j</small></span></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-l</small></span></header>
 <section id="p-learn">
  <div class="mut gdt" style="margin:0 0 6px"></div>
  <div id="chat"></div>
@@ -199,6 +201,13 @@ body.kbo #dock{padding-bottom:8px}
     <div class="mut" id="gdsp" style="margin-top:8px"></div>
     <label style="display:flex;gap:10px;align-items:center;margin:12px 0 6px"><input type="checkbox" id="gdauto" style="width:22px;flex:none" checked><span>改完資料自動同步（Gist 隨時可用；Drive 需授權有效）</span></label>
     <div class="mut gdst" id="gdstat" style="margin-top:8px"></div>
+   </div>
+  </details>
+  <details class="card"><summary>貼上檢查（上下標／化學式）</summary>
+   <div style="margin-top:10px">
+    <p class="mut" style="margin-top:0">貼上沒有變成 ₂、⁻ 時，在下面的框按貼上，會顯示剪貼簿裡到底有沒有上下標資訊，以及會被貼成什麼。</p>
+    <textarea id="pchk" rows="2" placeholder="在這裡貼上（Ctrl+V 或長按貼上）"></textarea>
+    <pre id="pchkr" class="mut" style="white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0;font:13px/1.5 inherit"></pre>
    </div>
   </details>
   <details class="card"><summary>GitHub Gist 同步</summary>
@@ -807,34 +816,76 @@ document.addEventListener('click',e=>{
   ['n','e'].forEach(k=>{const p=$('#p-'+k),c=p&&p.querySelectorAll('.selitem.sel');if(c&&c.length){c.forEach(x=>x.classList.remove('sel'));nbar(k)}});
 });
 /* ===== 貼上時保留上下標：從網頁複製 N<sub>2</sub>O、COO<sup>−</sup> 時，轉成 N₂O、COO⁻ ===== */
-const SUBRE=/<su[bp][\s>]|vertical-align\s*:\s*(sub|super)\b/i;
+const SUBRE=/<su[bp][\s>]|vertical-align\s*:\s*(sub|super)\b|<ms(ub|up|ubsup)[\s>]|<math[\s>]|class="[^"]*\b(katex|MathJax)\b|<mjx-container|class="(?:[^"]*\s)?su[bp](?:script)?(?:\s[^"]*)?"/i;
+function mml(n){
+  if(n.nodeType===3)return n.data.replace(/[\s\u00a0]+/g,'');
+  if(n.nodeType!==1)return '';
+  const t=n.localName.toLowerCase(),k=[...n.childNodes].filter(c=>c.nodeType===1);
+  if(t==='annotation'||t==='annotation-xml')return '';
+  if(t==='msub'||t==='msup'||t==='msubsup'){
+    const base=mml(k[0]),sb=t==='msup'?'':mml(k[1]),sp=t==='msub'?'':mml(k[t==='msup'?1:2]);
+    const f=(x,M,m)=>{if(!x)return '';const v=mapAll(x,M);return v!=null?v:m+'('+x+')'};
+    return base+f(sb,SUBM,'_')+f(sp,SUPM,'^');
+  }
+  return [...n.childNodes].map(mml).join('');
+}
 function htmlToPlain(html){
   const d=new DOMParser().parseFromString(html,'text/html');
   d.querySelectorAll('script,style,head,title,meta').forEach(n=>n.remove());
-  const BLK=/^(P|DIV|LI|TR|H[1-6]|UL|OL|TABLE|BLOCKQUOTE|PRE|SECTION|ARTICLE|HEADER|FOOTER)$/;
+  const BLK=/^(p|div|li|tr|h[1-6]|ul|ol|table|blockquote|pre|section|article|header|footer)$/;
   let out='';
   const nl=()=>{if(out&&!out.endsWith('\n')&&!out.endsWith('• '))out+='\n'};
   const walk=n=>{
     if(n.nodeType===3){let t=n.data.replace(/[\s\u00a0]+/g,' ');if(out===''||out.endsWith('\n'))t=t.replace(/^ /,'');out+=t;return}
     if(n.nodeType!==1)return;
-    const tg=n.tagName;
-    if(tg==='BR'){out+='\n';return}
+    const ln=n.localName.toLowerCase(),cl=n.classList;
+    if(ln==='br'){out+='\n';return}
+    if(ln==='math'){out+=mml(n);return}
+    if(cl.contains('katex')){const mm=n.querySelector('math');if(mm){out+=mml(mm);return}const an=n.querySelector('annotation');if(an){out+=texMath(an.textContent);return}}
+    if(cl.contains('katex-html'))return;
+    if(ln==='mjx-container'){const mm=n.querySelector('math');out+=mm?mml(mm):(n.getAttribute('aria-label')||n.textContent);return}
     const st=(n.getAttribute('style')||'').toLowerCase();
-    const m=tg==='SUB'||/vertical-align\s*:\s*sub\b/.test(st)?'sub':tg==='SUP'||/vertical-align\s*:\s*super\b/.test(st)?'sup':'';
-    if(m){const inner=n.textContent.replace(/[\s\u00a0]+/g,''),v=mapAll(inner,m==='sub'?SUBM:SUPM);out+=v!=null?v:(m==='sub'?'_(':'^(')+inner+')';return}
-    const b=BLK.test(tg);if(b)nl();
-    if(tg==='LI')out+='• ';
+    let m='',soft=false;
+    if(ln==='sub'||/vertical-align\s*:\s*sub\b/.test(st))m='sub';
+    else if(ln==='sup'||/vertical-align\s*:\s*super\b/.test(st))m='sup';
+    else{const tk=(n.getAttribute('class')||'').split(/\s+/);if(tk.includes('sub')||tk.includes('subscript')){m='sub';soft=true}else if(tk.includes('sup')||tk.includes('superscript')){m='sup';soft=true}}
+    if(m){const inner=n.textContent.replace(/[\s\u00a0]+/g,''),v=mapAll(inner,m==='sub'?SUBM:SUPM);out+=v!=null?v:soft?n.textContent.replace(/[\s\u00a0]+/g,' '):(m==='sub'?'_(':'^(')+inner+')';return}
+    const b=BLK.test(ln);if(b)nl();
+    if(ln==='li')out+='• ';
     n.childNodes.forEach(walk);
     if(b)nl();
   };
   walk(d.body);
   return out.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
 }
+/* 貼上檢查：說明剪貼簿裡到底有什麼 */
+function pasteCheck(cd){
+  const html=cd.getData('text/html'),plain=cd.getData('text/plain'),f=[];
+  if(/<su[bp][\s>]/i.test(html))f.push('<sub>/<sup> 標籤');
+  if(/vertical-align\s*:\s*(sub|super)/i.test(html))f.push('vertical-align 樣式');
+  if(/<ms(ub|up|ubsup)[\s>]|<math[\s>]/i.test(html))f.push('MathML 公式');
+  if(/class="[^"]*\bkatex\b/i.test(html))f.push('KaTeX 公式');
+  if(/<mjx-container|MathJax/i.test(html))f.push('MathJax 公式');
+  if(/class="(?:[^"]*\s)?su[bp](?:script)?(?:\s[^"]*)?"/i.test(html))f.push('class 名稱為 sub/sup');
+  if(/<img[\s>]/i.test(html))f.push('含圖片（公式可能是圖片，無法轉成文字）');
+  const conv=SUBRE.test(html)?htmlToPlain(html):'';
+  return '剪貼簿格式：'+([...cd.types].join('、')||'（空）')+'\n偵測到：'+(f.length?f.join('、'):'沒有任何上下標資訊'+(html?'（來源有 HTML，但上下標沒有被標記出來）':'（來源只有純文字）'))+'\n\n純文字內容：\n'+plain.slice(0,300)+'\n\n轉換後會貼成：\n'+(conv||'（沒有可轉換的格式，會原樣貼上）').slice(0,300)+(html?'\n\nHTML 前 600 字：\n'+html.replace(/\s+/g,' ').slice(0,600):'');
+}
+let PNOTED=false;
+function pasteNote(t){
+  try{if(!S.busy){const st=$('#status');st.textContent=t;setTimeout(()=>{if(st.textContent===t)st.textContent=''},9000)}}catch(e){}
+  try{topmsg(t)}catch(e){}
+}
 document.addEventListener('paste',e=>{
   const el=e.target;if(!el||!/^(TEXTAREA|INPUT)$/.test(el.tagName))return;
   if(el.tagName==='INPUT'&&!/^(|text|search)$/.test(el.type))return;
   const cd=e.clipboardData;if(!cd)return;
-  const html=cd.getData('text/html');if(!html||!SUBRE.test(html))return;
+  if(el.id==='pchk'){e.preventDefault();$('#pchkr').textContent=pasteCheck(cd);return}
+  const html=cd.getData('text/html');
+  if(!html||!SUBRE.test(html)){
+    if(!PNOTED&&/[A-Z][a-z]?\d/.test(cd.getData('text/plain'))){PNOTED=true;pasteNote('這次貼上的內容沒有帶下標／上標格式（來源只給純文字，或公式是圖片），所以沒辦法自動變成 ₂。可到「設定 → 貼上檢查」確認剪貼簿內容。')}
+    return;
+  }
   const t=htmlToPlain(html);if(!t)return;
   e.preventDefault();
   const a=el.selectionStart==null?el.value.length:el.selectionStart,b=el.selectionEnd==null?a:el.selectionEnd;
