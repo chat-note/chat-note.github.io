@@ -162,7 +162,7 @@ body.kbo #dock{padding-bottom:8px}
 </head>
 <body>
 <main>
-<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-i</small></span></header>
+<header id="top"><button id="hmb" aria-label="選單">☰</button><button id="tbc" class="wt on" aria-label="聊天">聊天</button><button id="nbk" class="wt" aria-label="筆記本">筆記本</button><button id="ebk" class="wt" aria-label="AI 摘要">AI 摘要</button><span id="lgw"><b id="lgo" role="button" tabindex="0" aria-label="同步到雲端" title="同步到雲端">Chatnote</b><small id="ver" class="hide">v2026.10.24-j</small></span></header>
 <section id="p-learn">
  <div class="mut gdt" style="margin:0 0 6px"></div>
  <div id="chat"></div>
@@ -286,7 +286,14 @@ const DEFAULT_CID='90390991542-ltv461huqvqdvrqh0tm3beu1mcrtkb8h.apps.googleuserc
 const EFF_CID=(()=>{try{return (new URLSearchParams(location.search).get('cid')||'').trim()||DEFAULT_CID}catch(e){return DEFAULT_CID}})();
 const ls={get(k,d){try{const v=localStorage.getItem(k);if(k==='oc_gd_cid'&&!v&&EFF_CID)return EFF_CID;return v===null?d:v}catch(e){return k==='oc_gd_cid'&&EFF_CID?EFF_CID:d}},set(k,v){try{localStorage.setItem(k,v);if(SK.includes(k)){localStorage.setItem('oc_mod',String(Date.now()));if(window.schedPush)window.schedPush()}return true}catch(e){return false}}};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const tex=t=>String(t==null?'':t).replace(/\$/g,'');
+/* 化學式、離子電荷的上下標：統一用 Unicode 字元（H₂O、CO₃²⁻），純文字複製貼上也不會跑掉 */
+const SUBM={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','+':'₊','-':'₋','−':'₋','–':'₋','=':'₌','(':'₍',')':'₎',a:'ₐ',e:'ₑ',h:'ₕ',i:'ᵢ',j:'ⱼ',k:'ₖ',l:'ₗ',m:'ₘ',n:'ₙ',o:'ₒ',p:'ₚ',r:'ᵣ',s:'ₛ',t:'ₜ',u:'ᵤ',v:'ᵥ',x:'ₓ'};
+const SUPM={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻','−':'⁻','–':'⁻','=':'⁼','(':'⁽',')':'⁾',n:'ⁿ',i:'ⁱ'};
+const mapAll=(s,M)=>{let o='';for(const c of String(s).replace(/[\s\u00a0]+/g,'')){const v=M[c];if(v==null)return null;o+=v}return o||null};
+const texMath=b=>b.replace(/\\(?:mathrm|textrm|text|mathbf|ce)\{([^{}]*)\}/g,'$1')
+  .replace(/_\{([^{}]*)\}|_([0-9+\-−])/g,(x,a,c)=>{const v=mapAll(a!=null?a:c,SUBM);return v==null?x:v})
+  .replace(/\^\{([^{}]*)\}|\^([0-9+\-−])/g,(x,a,c)=>{const v=mapAll(a!=null?a:c,SUPM);return v==null?x:v});
+const tex=t=>String(t==null?'':t).replace(/\$([^$\n]{1,120})\$/g,(m,b)=>texMath(b)).replace(/\$/g,'');
 /* 把（已 esc 的）文字裡的網址變成可點的連結：只認 http/https，新分頁開啟 */
 const linkify=h=>h.replace(/https?:\/\/[A-Za-z0-9\-._~:\/?#@!$&*+,;=%()\[\]]+/g,m=>{
   let u=m.replace(/&(lt|gt|quot);[\s\S]*$/,''),tail=m.slice(u.length),end='';
@@ -395,7 +402,7 @@ function toCl(c){
   }).filter(Boolean);
 }
 const META=`回答的最後一行（獨立一行）必須附上：<<<META{"title":"10到20字的標題","kws":["科目或大分類","關鍵字2","關鍵字3"]}>>>。kws 一定要有 3 到 5 個，第一個是科目或大分類（例如 英文文法、生物、優惠），其餘是名詞，2 到 8 個字，繁體中文，不要空白、不要 #。這行是給程式讀的，正文不要提到它。`;
-const FMT=`格式規則：不要開場白或自我介紹（不要說哈囉、我是你的家教、我們一步一步來），第一句直接進入內容。不要使用 # 標題、** 粗體、*** 或表格，用純文字、換行和「•」條列，段落標題用【】。`;
+const FMT=`格式規則：不要開場白或自我介紹（不要說哈囉、我是你的家教、我們一步一步來），第一句直接進入內容。不要使用 # 標題、** 粗體、*** 或表格，用純文字、換行和「•」條列，段落標題用【】。化學式、離子電荷和數學上下標，一律直接用 Unicode 上下標字元書寫（例如 H₂O、N₂O、CO₃²⁻、R−COO⁻、x²、10⁻³），不要用 LaTeX（不要 $ 符號、_、^），也不要用 <sub>、<sup> 標籤。`;
 const SYS=`你是自學者的家教，學生可能問任何科目（語文、理科、數學、社會、證照、生活等）。一律依學生提供的圖片或文字本身判斷科目與回答方式，不預設任何特定科目，也不套用固定的科目格式。回答要完整涵蓋學生提供的全部內容，不要只講局部；內容有多題或多段時，依順序逐一處理。一律使用繁體中文，用白話、生活化的比喻解釋，專有名詞第一次出現時附英文。禁止使用 LaTeX 或美元符號 $；公式與符號用一般文字和 Unicode 表示（例如 x²、√、→、H₂O）。
 不要先複述或列出你看到了什麼（例如「我看到的內容」「學生詢問的問題」這類開頭），也不要複述題目或訊息，不管有沒有圖片，一律直接回應。只有真的看不清楚的地方，才在回答裡明說「不確定」，不要猜。簡單的問題（例如日期、天氣、名詞定義）用一兩句話直接答完，不要加標題，也不要套用題目講解的格式。
 如果圖片或訊息是有選項的題目：先給出答案，再逐一詳解每個選項（為什麼對、為什麼錯、錯在哪個觀念），最後用一兩句總結關鍵觀念。全程不要以問句收尾，不要留問題給學生。
@@ -409,7 +416,7 @@ ${META}`;
 const SYSO=`你是優惠整理助手，一律使用繁體中文，不要使用 LaTeX 或 $。收到圖片（優惠券、QR code、活動海報、截圖）時，直接整理出：店家或品牌、優惠內容、使用期限、使用條件與限制、使用方式；不要寫「我看到的內容」這類開頭，也不要複述你看到了什麼，直接給整理結果。看不清楚或無法確定的地方明說「不確定」，不要猜。QR code 本身你無法掃描，只能讀旁邊的文字。
 ${FMT}
 ${META}`;
-const SYS2='你是筆記整理助手。使用繁體中文，不要用 LaTeX 或 $ 符號。';
+const SYS2='你是筆記整理助手。使用繁體中文，不要用 LaTeX 或 $ 符號。化學式、離子電荷和數學上下標，一律直接用 Unicode 上下標字元書寫（例如 H₂O、N₂O、CO₃²⁻、R−COO⁻、x²、10⁻³），不要用 LaTeX（不要 $ 符號、_、^），也不要用 <sub>、<sup> 標籤。';
 const kwTail=(m,v)=>'kws 是 1 到 3 個關鍵字，2 到 8 個字、以名詞為主'+(m==='o'?'（例如 餐飲、交通、信用卡、咖啡）':'（例如 現在完成式、光合作用、二次函數）')+'。已有的關鍵字請優先沿用，同義的不要另創：'+(v||'（目前沒有）')+'。全部繁體中文，不要用 LaTeX。';
 const sumP=(m,v)=>(m==='o'
  ?'請把以上對話與圖片中的每一則優惠整理成筆記（今天是'+new Date().toLocaleDateString('zh-TW')+'）。只輸出 JSON：{"items":[{"title":"店家＋優惠（一行）","body":"店家：…\\n優惠：…\\n期限：…\\n條件：…\\n使用方式：…","kws":["關鍵字"]}]}\n'
@@ -799,12 +806,51 @@ document.addEventListener('click',e=>{
   if(S.sel.size||S.snip){S.sel.clear();clearSnip()}
   ['n','e'].forEach(k=>{const p=$('#p-'+k),c=p&&p.querySelectorAll('.selitem.sel');if(c&&c.length){c.forEach(x=>x.classList.remove('sel'));nbar(k)}});
 });
+/* ===== 貼上時保留上下標：從網頁複製 N<sub>2</sub>O、COO<sup>−</sup> 時，轉成 N₂O、COO⁻ ===== */
+const SUBRE=/<su[bp][\s>]|vertical-align\s*:\s*(sub|super)\b/i;
+function htmlToPlain(html){
+  const d=new DOMParser().parseFromString(html,'text/html');
+  d.querySelectorAll('script,style,head,title,meta').forEach(n=>n.remove());
+  const BLK=/^(P|DIV|LI|TR|H[1-6]|UL|OL|TABLE|BLOCKQUOTE|PRE|SECTION|ARTICLE|HEADER|FOOTER)$/;
+  let out='';
+  const nl=()=>{if(out&&!out.endsWith('\n')&&!out.endsWith('• '))out+='\n'};
+  const walk=n=>{
+    if(n.nodeType===3){let t=n.data.replace(/[\s\u00a0]+/g,' ');if(out===''||out.endsWith('\n'))t=t.replace(/^ /,'');out+=t;return}
+    if(n.nodeType!==1)return;
+    const tg=n.tagName;
+    if(tg==='BR'){out+='\n';return}
+    const st=(n.getAttribute('style')||'').toLowerCase();
+    const m=tg==='SUB'||/vertical-align\s*:\s*sub\b/.test(st)?'sub':tg==='SUP'||/vertical-align\s*:\s*super\b/.test(st)?'sup':'';
+    if(m){const inner=n.textContent.replace(/[\s\u00a0]+/g,''),v=mapAll(inner,m==='sub'?SUBM:SUPM);out+=v!=null?v:(m==='sub'?'_(':'^(')+inner+')';return}
+    const b=BLK.test(tg);if(b)nl();
+    if(tg==='LI')out+='• ';
+    n.childNodes.forEach(walk);
+    if(b)nl();
+  };
+  walk(d.body);
+  return out.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
+}
+document.addEventListener('paste',e=>{
+  const el=e.target;if(!el||!/^(TEXTAREA|INPUT)$/.test(el.tagName))return;
+  if(el.tagName==='INPUT'&&!/^(|text|search)$/.test(el.type))return;
+  const cd=e.clipboardData;if(!cd)return;
+  const html=cd.getData('text/html');if(!html||!SUBRE.test(html))return;
+  const t=htmlToPlain(html);if(!t)return;
+  e.preventDefault();
+  const a=el.selectionStart==null?el.value.length:el.selectionStart,b=el.selectionEnd==null?a:el.selectionEnd;
+  el.setRangeText(t,a,b,'end');
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+},true);
+async function clipRich(){
+  try{for(const it of await navigator.clipboard.read()){if(it.types.includes('text/html')){const h=await(await it.getType('text/html')).text();if(SUBRE.test(h)){const t=htmlToPlain(h);if(t)return t}}}}catch(e){}
+  try{return await navigator.clipboard.readText()}catch(e){return ''}
+}
 S.clip='';
 const flash=(b,t)=>{const o=b.textContent;b.textContent=t;setTimeout(()=>{b.textContent=o},1200)};
 async function copyText(t){S.clip=t;try{await navigator.clipboard.writeText(t);return true}catch(e){try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(x){return false}}}
 $('#selcp').onclick=async e=>{const t=S.snip||bodyOf(selIdx());if(!t)return;flash(e.target,(await copyText(t))?'已複製':'複製失敗')};
 $('#selsh').onclick=()=>{const t=S.snip||bodyOf(selIdx());if(t)shareOut('Chatnote',t)};
-$('#selps').onclick=async()=>{let t='';try{t=await navigator.clipboard.readText()}catch(e){}if(!t)t=S.clip;if(!t)return;const q=$('#q'),a=q.selectionStart==null?q.value.length:q.selectionStart,b=q.selectionEnd==null?a:q.selectionEnd;q.value=q.value.slice(0,a)+t+q.value.slice(b);q.focus();q.selectionStart=q.selectionEnd=a+t.length;autoH();updSend()};
+$('#selps').onclick=async()=>{let t=await clipRich();if(!t)t=S.clip;if(!t)return;const q=$('#q'),a=q.selectionStart==null?q.value.length:q.selectionStart,b=q.selectionEnd==null?a:q.selectionEnd;q.value=q.value.slice(0,a)+t+q.value.slice(b);q.focus();q.selectionStart=q.selectionEnd=a+t.length;autoH();updSend()};
 chat.addEventListener('contextmenu',e=>{if(e.target.closest('.msg:not(.tx)')&&!e.target.closest('a'))e.preventDefault()});
 chat.addEventListener('click',e=>{
   if(LPF){LPF=false;return}
